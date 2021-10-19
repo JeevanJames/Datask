@@ -8,4 +8,9 @@
         <Description>Datask ExcelData core library</Description>
     </PropertyGroup>
 
+    <ItemGroup>
+        <PackageReference Include="EPPlus" Version="4.5.3.3" />
+        <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
+    </ItemGroup>
+
 </Project>

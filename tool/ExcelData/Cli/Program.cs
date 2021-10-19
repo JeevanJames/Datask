@@ -1,11 +1,26 @@
 //TODO: Correct namespace
-namespace Tool.ExcelData
+
+using System.Threading.Tasks;
+
+using ConsoleFx.CmdLine;
+using ConsoleFx.CmdLine.ErrorHandling;
+using ConsoleFx.CmdLine.Help;
+
+namespace Datask.Tool.ExcelData
 {
-    internal static class Program
+    public sealed class Program : ConsoleProgram
     {
-        private static void Main(string[] args)
+        public static async Task<int> Main()
         {
-            // Code here
+            var program = new Program();
+            program.WithHelpBuilder(() => new DefaultColorHelpBuilder("help", "h"));
+            program.HandleErrorsWith<DefaultErrorHandler>();
+            program.ScanEntryAssemblyForCommands();
+#if DEBUG_TOOL || DEBUG
+            return await program.RunDebugAsync(condition: () => true).ConfigureAwait(false);
+#else
+            return await program.RunWithCommandLineArgsAsync().ConfigureAwait(false);
+#endif
         }
     }
 }
