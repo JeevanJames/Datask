@@ -7,6 +7,12 @@
         <AssemblyName>exceldata</AssemblyName>
         <DocumentationFile>Properties\$(AssemblyName).xml</DocumentationFile>
         <Description>Tool to manage database data using Excel</Description>
+
+        <Configurations>Debug;Release;Debug-Tool;Release-Tool</Configurations>
+        <PackageId>dotnet-ExcelData</PackageId>
+        <PackageTags>ExcelData</PackageTags>
+        <Description>CLI tool to export the database table and column deatils in Excel..</Description>
+        <DocumentationFile>Properties\$(AssemblyName).xml</DocumentationFile>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-Tool|AnyCPU'">
@@ -18,5 +24,15 @@
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>exceldata</ToolCommandName>
     </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="ConsoleFx.CmdLine.Program" Version="2.0.0-build.419" />
+        <PackageReference Include="ConsoleFx.Prompter" Version="2.0.0-build.419" />
+        <PackageReference Include="Spectre.Console" Version="0.42.1-preview.0.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Core\Core.csproj" />
+    </ItemGroup>
 
 </Project>
