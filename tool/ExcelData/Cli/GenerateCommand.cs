@@ -19,17 +19,21 @@ namespace Datask.Tool.ExcelData
     [CommandHelp("Generates xlsx file with database table and column information.")]
     public class GenerateCommand : Command
     {
-        [Option("connection-string", "cs", Optional = false)]
-        [OptionHelp("The sql database connection string.")]
+        [Argument]
+        [ArgumentHelp("connection string", "The connection string to the database to create the Excel file from.")]
         public string ConnectionString { get; set; } = null!;
 
-        [Option("xlsx", "f", Optional = false)]
-        [OptionHelp("The xlsx file path.")]
+        [Argument]
+        [ArgumentHelp("file name", "The name of the Excel file to create.")]
         public FileInfo ExcelFile { get; set; } = null!;
 
-        [Option("s", Optional = true, MultipleOccurrences = true)]
-        [OptionHelp("Include Schemas.")]
+        [Option("include", "i", Optional = true, MultipleOccurrences = true)]
+        [OptionHelp("One or more regular expressions specifying the tables to include.This should match the<schema>.<table> format.")]
         public IList<string> IncludeSchema { get; } = new List<string>();
+
+        [Option("exclude", "e", Optional = true, MultipleOccurrences = true)]
+        [OptionHelp("One or more regular expressions specifying the tables to exclude.This should match the<schema>.<table> format.Tables are excluded after considering the tables to include.")]
+        public IList<string> ExcludeTables { get; } = new List<string>();
 
         public override async Task<int> HandleCommandAsync(IParseResult parseResult)
         {
@@ -41,7 +45,7 @@ namespace Datask.Tool.ExcelData
                     new ConfirmQuestion("ExcelFileName", $"Do you want to overwrite the existing file '{ExcelFile.FullName}' ? ", @default: false),
                     new InputQuestion("NewFilePath", "Enter the new xlsx file path: ")
                         .When(ans => !ans.ExcelFileName)
-                        .ValidateWith(file => file.Length > 0 && IsValidFilePath(file)),
+                        .ValidateWith(file => IsValidFilePath(file)),
                 };
 
                 dynamic answers = await prompter.Ask().ConfigureAwait(false);
@@ -81,10 +85,11 @@ namespace Datask.Tool.ExcelData
 
         private static bool IsValidFilePath(string path)
         {
-            return path.IndexOfAny(Path.GetInvalidPathChars()) == -1
-                   && Path.IsPathRooted(path)
-                   && path.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase)
-                   && !File.Exists(path);
+            return path.Length > 0
+                && path.IndexOfAny(Path.GetInvalidPathChars()) == -1
+                && Path.IsPathRooted(path)
+                && path.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase)
+                && !File.Exists(path);
         }
     }
 }

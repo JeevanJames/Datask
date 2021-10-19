@@ -25,7 +25,6 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
             await using var sqlConnection = new SqlConnection(configuration.ConnectionString);
 
             string includeSchemas = string.Join(',', configuration.IncludeSchemas.Select(x => $"'{x}'"));
-#pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
             using SqlDataAdapter dataAdapter = new(GetSqlStatementForTableInformation(includeSchemas), sqlConnection);
             await Task.Run(() => dataAdapter.Fill(dataSet, "Tables")).ConfigureAwait(false);
 
@@ -34,7 +33,6 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
 
             using SqlDataAdapter colDataAdapter = new(GetSqlStatementForTableColumnInformation(includeSchemas), sqlConnection);
             await Task.Run(() => colDataAdapter.Fill(dataSet, "Columns")).ConfigureAwait(false);
-#pragma warning restore CA2100 // Review SQL queries for security vulnerabilities
 
             // Get DataColumn Information
             DataColumn colTblTableName = dataSet.Tables["Tables"]?.Columns["TableName"]!;

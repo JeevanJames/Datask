@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Copyright (c) 2021 Jeevan James
+// This file is licensed to you under the MIT License.
+// See the LICENSE file in the project root for more information.
 
-namespace Datask.Tool.ExcelData.Core.Events
+using System;
+
+namespace Datask.Common.Events
 {
     public static class EventArgsExtensions
     {
@@ -15,10 +15,10 @@ namespace Datask.Tool.ExcelData.Core.Events
             string? message = null)
             where TType : Enum
         {
-            var handlerCopy = handler;
-            if (handlerCopy != null)
+            EventHandler<StatusEventArgs<TType>>? handlerCopy = handler;
+            if (handlerCopy is not null)
             {
-                var args = new StatusEventArgs<TType>(statusType, metadata, message);
+                var args = new StatusEventArgs<TType>(statusType, message, metadata);
                 handlerCopy(caller, args);
             }
         }
@@ -29,10 +29,10 @@ namespace Datask.Tool.ExcelData.Core.Events
             string? message = null)
             where TType : Enum
         {
-            var handlerCopy = handler;
-            if (handlerCopy != null)
+            EventHandler<StatusEventArgs<TType>>? handlerCopy = handler;
+            if (handlerCopy is not null)
             {
-                var args = new StatusEventArgs<TType>(statusType, metadata, message);
+                var args = new StatusEventArgs<TType>(statusType, message, metadata);
                 handlerCopy(null, args);
             }
         }

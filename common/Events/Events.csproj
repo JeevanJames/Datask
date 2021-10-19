@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <RootNamespace>$(BaseNamespace).Common.Events</RootNamespace>
+        <AssemblyName>$(RootNamespace)</AssemblyName>
+        <DocumentationFile>Properties\$(AssemblyName).xml</DocumentationFile>
+        <Description>Framework for events raised by various Datask libraries</Description>
+    </PropertyGroup>
+
+</Project>

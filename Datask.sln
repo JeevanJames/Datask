@@ -1,23 +1,39 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26124.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31729.503
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "provider", "provider", "{73FAFABE-3A7D-45AF-8973-7C91B1DDC717}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Providers", "provider\Providers\Providers.csproj", "{97564D7C-13D7-49D5-A850-01753FBC15D7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Providers", "provider\Providers\Providers.csproj", "{97564D7C-13D7-49D5-A850-01753FBC15D7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tool", "tool", "{1A99E882-4A5B-46B4-A1B9-9802AD120868}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ExcelData", "ExcelData", "{EE14486C-AF4A-4AF7-B06E-05DE7F1B421F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cli", "tool\ExcelData\Cli\Cli.csproj", "{90545FC4-5761-4255-BA87-312C5D5FF325}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cli", "tool\ExcelData\Cli\Cli.csproj", "{90545FC4-5761-4255-BA87-312C5D5FF325}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "tool\ExcelData\Core\Core.csproj", "{DD86B5FF-1758-47AB-9F59-4269566509F1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "tool\ExcelData\Core\Core.csproj", "{DD86B5FF-1758-47AB-9F59-4269566509F1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlServer", "provider\SqlServer\SqlServer.csproj", "{4ADA1CBE-437C-44AD-9936-5582AE1180ED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SqlServer", "provider\SqlServer\SqlServer.csproj", "{4ADA1CBE-437C-44AD-9936-5582AE1180ED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PostgreSql", "provider\PostgreSql\PostgreSql.csproj", "{EE9F8A23-D4E1-450B-8963-127781956D95}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PostgreSql", "provider\PostgreSql\PostgreSql.csproj", "{EE9F8A23-D4E1-450B-8963-127781956D95}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{65DDBD6C-DF2B-4A4D-B638-9459291C1C8E}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		Datask.ruleset = Datask.ruleset
+		Datask.sln.licenseheader = Datask.sln.licenseheader
+		Directory.Build.props = Directory.Build.props
+		NuGet.config = NuGet.config
+		README.md = README.md
+		stylecop.json = stylecop.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "common", "common", "{0AE4F394-3BD5-4928-8F60-3D00F2FD5C46}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Events", "common\Events\Events.csproj", "{D85490E2-D006-4670-9CC8-32397D7657C9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,9 +43,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{97564D7C-13D7-49D5-A850-01753FBC15D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -92,6 +105,21 @@ Global
 		{EE9F8A23-D4E1-450B-8963-127781956D95}.Release|x64.Build.0 = Release|Any CPU
 		{EE9F8A23-D4E1-450B-8963-127781956D95}.Release|x86.ActiveCfg = Release|Any CPU
 		{EE9F8A23-D4E1-450B-8963-127781956D95}.Release|x86.Build.0 = Release|Any CPU
+		{D85490E2-D006-4670-9CC8-32397D7657C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D85490E2-D006-4670-9CC8-32397D7657C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D85490E2-D006-4670-9CC8-32397D7657C9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D85490E2-D006-4670-9CC8-32397D7657C9}.Debug|x64.Build.0 = Debug|Any CPU
+		{D85490E2-D006-4670-9CC8-32397D7657C9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D85490E2-D006-4670-9CC8-32397D7657C9}.Debug|x86.Build.0 = Debug|Any CPU
+		{D85490E2-D006-4670-9CC8-32397D7657C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D85490E2-D006-4670-9CC8-32397D7657C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D85490E2-D006-4670-9CC8-32397D7657C9}.Release|x64.ActiveCfg = Release|Any CPU
+		{D85490E2-D006-4670-9CC8-32397D7657C9}.Release|x64.Build.0 = Release|Any CPU
+		{D85490E2-D006-4670-9CC8-32397D7657C9}.Release|x86.ActiveCfg = Release|Any CPU
+		{D85490E2-D006-4670-9CC8-32397D7657C9}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{97564D7C-13D7-49D5-A850-01753FBC15D7} = {73FAFABE-3A7D-45AF-8973-7C91B1DDC717}
@@ -100,5 +128,9 @@ Global
 		{DD86B5FF-1758-47AB-9F59-4269566509F1} = {EE14486C-AF4A-4AF7-B06E-05DE7F1B421F}
 		{4ADA1CBE-437C-44AD-9936-5582AE1180ED} = {73FAFABE-3A7D-45AF-8973-7C91B1DDC717}
 		{EE9F8A23-D4E1-450B-8963-127781956D95} = {73FAFABE-3A7D-45AF-8973-7C91B1DDC717}
+		{D85490E2-D006-4670-9CC8-32397D7657C9} = {0AE4F394-3BD5-4928-8F60-3D00F2FD5C46}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BCAE181F-0369-4BC5-84A2-3C7C02CDE1F7}
 	EndGlobalSection
 EndGlobal

@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
+using Datask.Common.Events;
 using Datask.Tool.ExcelData.Core.DbTableSorter;
 using Datask.Tool.ExcelData.Core.Events;
 
@@ -28,14 +25,14 @@ namespace Datask.Tool.ExcelData.Core
 
         public DataBuilder(DataConfiguration configuration)
         {
-            _configuration = configuration;
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
         public async Task ExportExcel()
         {
             using ExcelPackage package = new(_configuration.FilePath);
 
-            await FillExcelData(package);
+            await FillExcelData(package).ConfigureAwait(false);
 
             package.Save();
         }
@@ -73,14 +70,13 @@ namespace Datask.Tool.ExcelData.Core
         private static void CreateExcelTables(ExcelWorksheet worksheet, TableData tableInfo)
         {
             ExcelRange tableRange = worksheet.Cells[1, 1, worksheet.Dimension.End.Row, worksheet.Dimension.End.Column];
-            string tableName = tableInfo.TableName;
             tableRange.Style.Border.Top.Style = ExcelBorderStyle.Medium;
             tableRange.Style.Border.Left.Style = ExcelBorderStyle.Medium;
             tableRange.Style.Border.Right.Style = ExcelBorderStyle.Medium;
             tableRange.Style.Border.Bottom.Style = ExcelBorderStyle.Medium;
 
             //Adding a table to a Range
-            ExcelTable tab = worksheet.Tables.Add(tableRange, tableName);
+            ExcelTable tab = worksheet.Tables.Add(tableRange, tableInfo.TableName);
 
             //Formatting the table style
             tab.TableStyle = TableStyles.Dark10;
@@ -128,7 +124,7 @@ namespace Datask.Tool.ExcelData.Core
 
                         //var fkCellRange = ExcelRange.GetAddress(2, i + 1, ExcelPackage.MaxRows, i + 1);
                         IExcelDataValidationList? fkDataValidation = worksheet.DataValidations.AddListValidation(columnDataRange);
-                        string fkColumnLetter = ExcelCellAddress.GetColumnLetter((int)(fkColumnPosition!));
+                        string fkColumnLetter = ExcelCellAddress.GetColumnLetter((int)fkColumnPosition);
                         string validationFormula =
                             $"='{tableInfo.Columns[i].ReferenceTableName}'!${fkColumnLetter}$2:${fkColumnLetter}${ExcelPackage.MaxRows}";
 
@@ -140,8 +136,7 @@ namespace Datask.Tool.ExcelData.Core
             }
             else if (tableInfo.Columns[i].IsPrimaryKey)
             {
-                ExcelComment? cellMetaDataComment = worksheet.Cells[1, i + 1].AddComment(
-                    $"PrimaryKey", "Owner");
+                ExcelComment? cellMetaDataComment = worksheet.Cells[1, i + 1].AddComment("PrimaryKey", "Owner");
                 cellMetaDataComment.AutoFit = true;
             }
 
@@ -181,8 +176,7 @@ namespace Datask.Tool.ExcelData.Core
                 IExcelDataValidationInt? intDataValidation = worksheet.DataValidations.AddIntegerValidation(columnDataRange);
 
                 intDataValidation.ShowErrorMessage = true;
-                intDataValidation.Error =
-                    $"The value must be an integer.";
+                intDataValidation.Error = "The value must be an integer.";
                 intDataValidation.Formula.Value = 0;
                 intDataValidation.Formula2.Value = int.MaxValue;
             }
