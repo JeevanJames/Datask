@@ -17,6 +17,7 @@ Options:
   -e, --exclude   [*] One or more regular expressions specifying the tables to
                   exclude. This should match the <schema>.<table> format. Tables
                   are excluded after considering the tables to include.
+      --force     If the Excel file already exists, overwrite it.
 ```
 
 ## Validate Excel file is up-to-date with the database

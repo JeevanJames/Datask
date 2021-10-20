@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <RootNamespace>$(BaseNamespace).Common.Cli</RootNamespace>
+        <AssemblyName>$(RootNamespace)</AssemblyName>
+        <DocumentationFile>Properties\$(AssemblyName).xml</DocumentationFile>
+        <Description>Reusable CLI code</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="ConsoleFx.CmdLine.Abstractions" Version="2.0.0-build.420" />
+      <PackageReference Include="Spectre.Console" Version="0.42.1-preview.0.2" />
+    </ItemGroup>
+
+</Project>
