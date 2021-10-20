@@ -29,29 +29,19 @@ namespace Datask.Providers
         private readonly Lazy<IList<ColumnDefinition>> _columns = new(() => new List<ColumnDefinition>());
         private readonly Lazy<IList<ForeignKeyDefinition>> _foreignKeys = new(() => new List<ForeignKeyDefinition>());
 
-        public TableDefinition(string name, SchemaDefinition schema)
+        public TableDefinition(string name, string schema)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
-            Schema = schema;
+            Schema = schema ?? throw new ArgumentNullException(nameof(schema));
         }
 
         public string Name { get; }
 
-        public SchemaDefinition Schema { get; }
+        public string Schema { get; }
 
         public IList<ColumnDefinition> Columns => _columns.Value;
 
         public IList<ForeignKeyDefinition> ForeignKeys => _foreignKeys.Value;
-    }
-
-    public record SchemaDefinition : INamedDefinition
-    {
-        public SchemaDefinition(string name)
-        {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
-        }
-
-        public string Name { get; }
     }
 
     public sealed record ColumnDefinition
