@@ -19,11 +19,11 @@ namespace Datask.Tool.ExcelData
     [CommandHelp("Generates xlsx file with database table and column information.")]
     public class GenerateCommand : Command
     {
-        [Argument]
+        [Argument(Order = 0)]
         [ArgumentHelp("connection string", "The connection string to the database to create the Excel file from.")]
         public string ConnectionString { get; set; } = null!;
 
-        [Argument]
+        [Argument(Order = 1)]
         [ArgumentHelp("file name", "The name of the Excel file to create.")]
         public FileInfo ExcelFile { get; set; } = null!;
 

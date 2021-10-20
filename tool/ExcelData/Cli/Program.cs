@@ -1,5 +1,3 @@
-//TODO: Correct namespace
-
 using System.Threading.Tasks;
 
 using ConsoleFx.CmdLine;
