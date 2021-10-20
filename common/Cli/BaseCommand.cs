@@ -14,7 +14,8 @@ namespace Datask.Common.Cli
     {
         public sealed override Task<int> HandleCommandAsync(IParseResult parseResult)
         {
-            return DataskCli.StartAsync("Processing...", async ctx => await ExecuteAsync(ctx, parseResult));
+            return DataskCli.StartAsync("Processing...",
+                async ctx => await ExecuteAsync(ctx, parseResult).ConfigureAwait(false));
         }
 
         protected abstract Task<int> ExecuteAsync(StatusContext ctx, IParseResult parseResult);

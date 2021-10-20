@@ -26,13 +26,13 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
 
             string includeSchemas = string.Join(',', configuration.IncludeSchemas.Select(x => $"'{x}'"));
             using SqlDataAdapter dataAdapter = new(GetSqlStatementForTableInformation(includeSchemas), sqlConnection);
-            await Task.Run(() => dataAdapter.Fill(dataSet, "Tables")).ConfigureAwait(false);
+            dataAdapter.Fill(dataSet, "Tables");
 
             using SqlDataAdapter refDataAdapter = new(GetSqlStatementForReferences(includeSchemas), sqlConnection);
-            await Task.Run(() => refDataAdapter.Fill(dataSet, "Reference")).ConfigureAwait(false);
+            refDataAdapter.Fill(dataSet, "Reference");
 
             using SqlDataAdapter colDataAdapter = new(GetSqlStatementForTableColumnInformation(includeSchemas), sqlConnection);
-            await Task.Run(() => colDataAdapter.Fill(dataSet, "Columns")).ConfigureAwait(false);
+            colDataAdapter.Fill(dataSet, "Columns");
 
             // Get DataColumn Information
             DataColumn colTblTableName = dataSet.Tables["Tables"]?.Columns["TableName"]!;
@@ -118,7 +118,7 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
         private static string GetSqlStatementForTableColumnInformation(string includeSchemas)
         {
             StringBuilder sb = new();
-            sb.Append("select schema_name(tab.schema_id) + \'.\' + tab.name as TableName, ");
+            sb.Append("select schema_name(tab.schema_id) + '.' + tab.name as TableName, ");
             sb.Append("col.column_id, ");
             sb.Append("col.name as ColumnName, ");
             sb.Append("col_s.DATA_TYPE, col_s.ORDINAL_POSITION, ");
@@ -126,7 +126,7 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
             sb.Append("col_s.is_nullable, ");
             sb.Append("ku.CONSTRAINT_NAME as PrimaryKeyCol, ");
             sb.Append("case when fk.object_id is not null then '>-' else null end as rel, ");
-            sb.Append("schema_name(pk_tab.schema_id) + \'.\' + pk_tab.name as ReferenceTableName, ");
+            sb.Append("schema_name(pk_tab.schema_id) + '.' + pk_tab.name as ReferenceTableName, ");
             sb.Append("pk_col.name as ReferenceColumnName, ");
             sb.Append("fk.name as fk_constraint_name ");
             sb.Append("from sys.tables tab ");
@@ -157,9 +157,9 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
         {
             StringBuilder sb = new();
 
-            sb.Append("SELECT TABLE_SCHEMA + \'.\' + TABLE_NAME AS TableName ");
+            sb.Append("SELECT TABLE_SCHEMA + '.' + TABLE_NAME AS TableName ");
             sb.Append("FROM INFORMATION_SCHEMA.Tables ");
-            sb.Append("WHERE TABLE_TYPE=\'BASE TABLE\' ");
+            sb.Append("WHERE TABLE_TYPE='BASE TABLE' ");
             if (!string.IsNullOrEmpty(includeSchemas))
                 sb.Append($"AND TABLE_SCHEMA in ({includeSchemas})");
             sb.Append("ORDER BY TableName ");
