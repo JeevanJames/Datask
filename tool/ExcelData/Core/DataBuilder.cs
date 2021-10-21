@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 using Datask.Common.Events;
@@ -55,7 +56,7 @@ namespace Datask.Tool.ExcelData.Core
 
                 for (int i = 0; i < tableInfo.Columns.Count; i++)
                 {
-                    worksheet.Cells[1, i + 1].Value = tableInfo.Columns[i].Name + " " + tableInfo.Columns[i].FormattedType;
+                    worksheet.Cells[1, i + 1].Value = tableInfo.Columns[i].Name;
                     worksheet.Cells[1, i + 1].Style.Font.Bold = true;
                     worksheet.Cells[1, i + 1].AutoFitColumns();
 
@@ -104,13 +105,11 @@ namespace Datask.Tool.ExcelData.Core
             //    pkCustomDataValidation.Formula.ExcelFormula = pkValidationFormula;
             //}
 
+            //Add column metadata into excel column comment section.
+            AddColumnMetaData(tableInfo, i, worksheet);
+
             if (tableInfo.Columns[i].IsForeignKey && !tableInfo.Columns[i].IsPrimaryKey)
             {
-                ExcelComment fkComment = worksheet.Cells[1, i + 1].AddComment(
-                    $"ForeignKey \n Reference table = {tableInfo.Columns[i].ReferenceTableName} \n Reference column = {tableInfo.Columns[i].ReferenceColumnName}",
-                    "Owner");
-                fkComment.AutoFit = true;
-
                 foreach (ExcelWorksheet sheet in package.Workbook.Worksheets)
                 {
                     foreach (ExcelTable table in sheet.Tables)
@@ -118,7 +117,7 @@ namespace Datask.Tool.ExcelData.Core
                         if (table.Name != tableInfo.Columns[i].ReferenceTableName)
                             continue;
 
-                        int? fkColumnPosition = table.Columns[tableInfo.Columns[i].ReferenceColumnName + " " + tableInfo.Columns[i].FormattedType]?.Id;
+                        int? fkColumnPosition = table.Columns[tableInfo.Columns[i].ReferenceColumnName]?.Id;
                         if (fkColumnPosition is null)
                             continue;
 
@@ -133,11 +132,6 @@ namespace Datask.Tool.ExcelData.Core
                         fkDataValidation.Formula.ExcelFormula = validationFormula;
                     }
                 }
-            }
-            else if (tableInfo.Columns[i].IsPrimaryKey)
-            {
-                ExcelComment? cellMetaDataComment = worksheet.Cells[1, i + 1].AddComment("PrimaryKey", "Owner");
-                cellMetaDataComment.AutoFit = true;
             }
 
             if (tableInfo.Columns[i].Type.Equals("datetime", StringComparison.OrdinalIgnoreCase))
@@ -157,7 +151,7 @@ namespace Datask.Tool.ExcelData.Core
                 bitDataValidation.Formula.Values.Add("1");
             }
             else if (tableInfo.Columns[i].Type.Contains("varchar", StringComparison.OrdinalIgnoreCase) &&
-                     tableInfo.Columns[i].MaxLength > 0 && !tableInfo.Columns[i].IsPrimaryKey)
+                     tableInfo.Columns[i].MaxLength > 0)
             {
                 //Add data validations for maxstring length
                 IExcelDataValidationInt? stringLenValidation = worksheet.DataValidations.AddTextLengthValidation(columnDataRange);
@@ -170,7 +164,7 @@ namespace Datask.Tool.ExcelData.Core
                 stringLenValidation.Formula2.Value = tableInfo.Columns[i].MaxLength;
             }
             else if (tableInfo.Columns[i].Type.Contains("int", StringComparison.OrdinalIgnoreCase) &&
-                     !tableInfo.Columns[i].IsForeignKey && !tableInfo.Columns[i].IsPrimaryKey)
+                     !tableInfo.Columns[i].IsForeignKey)
             {
                 //Add data validations for integer
                 IExcelDataValidationInt? intDataValidation = worksheet.DataValidations.AddIntegerValidation(columnDataRange);
@@ -180,6 +174,15 @@ namespace Datask.Tool.ExcelData.Core
                 intDataValidation.Formula.Value = 0;
                 intDataValidation.Formula2.Value = int.MaxValue;
             }
+        }
+
+        private static void AddColumnMetaData(TableData tableInfo, int i, ExcelWorksheet worksheet)
+        {
+            string columnMetadata =
+                JsonSerializer.Serialize(tableInfo.Columns[i], new JsonSerializerOptions { WriteIndented = true });
+
+            ExcelComment colComment = worksheet.Cells[1, i + 1].AddComment(columnMetadata, "Owner");
+            colComment.AutoFit = true;
         }
     }
 }

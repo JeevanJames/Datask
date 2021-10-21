@@ -1,0 +1,14 @@
+{
+    "RootNamespace": "TestData",
+    "ClassName": "TestData",
+    "ConnectionString": "Server=.\\DEV2008;Integrated Security=true;",
+    "Seed": {
+        "ExcelFilePath": ""
+    },
+    "Demo": {
+        "ExcelFilePath": ""
+    },
+    "Integration": {
+        "ExcelFilePath": ""
+    }
+}
