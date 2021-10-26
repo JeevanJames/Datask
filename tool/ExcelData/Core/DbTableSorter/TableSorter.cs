@@ -52,11 +52,6 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
                 // get a vertex with no successors, or -1
                 int currentVertex = NoSuccessors();
 
-                if (currentVertex == -1)
-#pragma warning disable S112 // General exceptions should never be thrown
-                    throw new Exception("Graph has cycles");
-#pragma warning restore S112 // General exceptions should never be thrown
-
                 // insert vertex label in sorted array (start at end)
                 _sortedArray[_numVertices - 1] = _vertices[currentVertex];
 
