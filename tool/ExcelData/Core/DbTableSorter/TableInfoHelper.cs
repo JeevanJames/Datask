@@ -95,6 +95,7 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
                 {
                     tableInfo.References.Add(new References()
                     {
+                        ForeignKey = row["ColumnName"].ToString()!,
                         ReferenceTable = referenceTableData,
                     });
                 }
