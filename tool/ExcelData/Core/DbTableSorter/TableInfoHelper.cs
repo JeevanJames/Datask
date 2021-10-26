@@ -6,7 +6,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Datask.Tool.ExcelData.Core.DbTableSorter
@@ -99,39 +98,40 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
                         ReferenceTable = referenceTableData,
                     });
                 }
-
-                //TableData tableInfo = sortedList[row[colTblTableName]?.ToString()!];
-
-                // Get the Reference Tables
-                //foreach (DataRow childRow in row.GetChildRows(dataRelation))
-                //{
-                //    string childTable = childRow[colRefTableName]?.ToString()!;
-
-                //    if (childTable.Equals(tableInfo!.TableName, StringComparison.OrdinalIgnoreCase))
-                //        continue;
-
-                //    // Add Child Table to Current Table
-                //    if (tableInfo.ReferencedBy.Contains(childTable))
-                //        continue;
-
-                //    tableInfo.ReferencedBy.Add(childTable);
-
-                //    // Add Reference Type Enumeration For Both Referenced and Referenced By Tables
-                //    tableInfo.AddRefType(RefType.ReferencedBy);
-                //    sortedList[childTable].AddRefType(RefType.References);
-                //}
-
-                //// Sort Referenced By Tables By Name
-                //tableInfo!.ReferencedBy.ToList().Sort();
             }
 
             //Perform Topological sorting
+            var sortOrder = GetTopologicalSortOrder(tableDataList).Reverse().ToList();
 
-            // Perform the Sort with the Custom Sorter
-            List<TableData> list = new(sortedList.Values);
-            list.Sort(new TableDataComparer(sortedList));
+            return sortOrder.ConvertAll(t => tableDataList[t]);
+        }
 
-            return list;
+        private static IEnumerable<int> GetTopologicalSortOrder(List<TableData> tables)
+        {
+            TableSorter tableSorter = new(tables.Count);
+            Dictionary<string, int> indexes = new();
+
+            //add vertices
+            for (int i = 0; i < tables.Count; i++)
+            {
+                indexes[tables[i].TableName.ToLower()] = tableSorter.AddVertex(i);
+            }
+
+            //add edges
+            for (int i = 0; i < tables.Count; i++)
+            {
+                var referenceTables = tables[i].References.Select(r => r.ReferenceTable.TableName).ToList();
+                if (!referenceTables.Any())
+                    continue;
+
+                foreach (string t in referenceTables)
+                {
+                    tableSorter.AddEdge(i, indexes[t.ToLower()]);
+                }
+            }
+
+            int[] result = tableSorter.Sort();
+            return result;
         }
 
         public static string ReadResource(string resourceName)
@@ -143,20 +143,9 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
             return reader.ReadToEnd();
         }
 
-        /// <summary>
-        /// AddRefType.
-        /// </summary>
-        /// <param name="tableData">tableData.</param>
-        /// <param name="referenceType">referenceType.</param>
-        private static void AddRefType(this TableData tableData, RefType referenceType)
+        public static IEnumerable<T> DistinctBy<T, TKey>(this IEnumerable<T> items, Func<T, TKey> property)
         {
-            if (tableData.RefType == RefType.RefAndRefBy)
-                return;
-
-            tableData.RefType |= referenceType;
-
-            if (tableData.RefType == (RefType.ReferencedBy | RefType.References))
-                tableData.RefType = RefType.RefAndRefBy;
+            return items.GroupBy(property).Select(x => x.First());
         }
     }
 }
