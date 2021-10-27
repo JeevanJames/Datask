@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using Datask.Common.Events;
@@ -28,34 +31,43 @@ namespace Datask.Tool.ExcelData.Core
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
-        public async Task ExportExcel()
+        public async Task<bool> ExportExcel()
         {
             using ExcelPackage package = new(_configuration.FilePath);
 
-            await FillExcelData(package).ConfigureAwait(false);
-
-            package.Save();
+            return await FillExcelData(package).ConfigureAwait(false);
         }
 
-        private async Task FillExcelData(ExcelPackage package)
+        private async Task<bool> FillExcelData(ExcelPackage package)
         {
-            foreach (TableData? tableInfo in await TableInfoHelper.GetTableList(_configuration).ConfigureAwait(false))
+            IEnumerable<TableData>? sortedTables = await TableInfoHelper.GetTableList(_configuration).ConfigureAwait(false);
+
+            sortedTables = FilterSortedTables(sortedTables).ToList();
+
+            if (!sortedTables.Any())
+                return false;
+
+            foreach (TableData? tableInfo in sortedTables)
             {
                 OnStatus.Fire(StatusEvents.Generate,
                     new { Table = tableInfo.TableName },
                     $"Getting the database table {tableInfo.TableName} information...");
 
-                string workSheetName = tableInfo.TableName.Length > 31
-                    ? $"{tableInfo.TableName.Substring(0, 28)}..."
-                    : tableInfo.TableName;
-                if (package.Workbook.Worksheets.Any(w => w.Name == workSheetName))
+                //Check if the table is added already
+                if (package.Workbook.Worksheets.Any(w => w.Tables.Any(t => t.Name == tableInfo.TableName)))
                     continue;
+
+                Random random = new();
+
+                string workSheetName = tableInfo.TableName.Length > 31
+                    ? $"{tableInfo.TableName.Substring(0, 24)}...{random.Next(1, 100)}"
+                    : tableInfo.TableName;
 
                 ExcelWorksheet? worksheet = package.Workbook.Worksheets.Add(workSheetName);
 
                 for (int i = 0; i < tableInfo.Columns.Count; i++)
                 {
-                    worksheet.Cells[1, i + 1].Value = tableInfo.Columns[i].Name + " " + tableInfo.Columns[i].FormattedType;
+                    worksheet.Cells[1, i + 1].Value = tableInfo.Columns[i].Name;
                     worksheet.Cells[1, i + 1].Style.Font.Bold = true;
                     worksheet.Cells[1, i + 1].AutoFitColumns();
 
@@ -65,6 +77,52 @@ namespace Datask.Tool.ExcelData.Core
                 //Defining the tables parameters
                 CreateExcelTables(worksheet, tableInfo);
             }
+
+            package.Save();
+            return true;
+        }
+
+        private IEnumerable<TableData> FilterSortedTables(IEnumerable<TableData> sortedTables)
+        {
+            List<TableData> filteredData = new();
+
+            //include the tables
+            if (_configuration.IncludeTables.Count > 0)
+            {
+                foreach (string includeTable in _configuration.IncludeTables)
+                {
+                    Regex rg = new(includeTable);
+                    filteredData.AddRange(sortedTables.Where(tableData => rg.IsMatch(tableData.TableName)));
+                }
+
+                return filteredData
+                    .DistinctBy(y => y.TableName);
+
+                //sortedTables = (from s in sortedTables
+                //    from include in _configuration.IncludeTables
+                //    where s.TableName == include
+                //    select s).ToList();
+            }
+
+            //exclude the tables
+            if (_configuration.ExcludeTables.Count > 0)
+            {
+                foreach (string excludeTable in _configuration.ExcludeTables)
+                {
+                    Regex rg = new(excludeTable);
+                    IEnumerable<TableData> matchTables = sortedTables.Where(tableData => rg.IsMatch(tableData.TableName));
+
+                    //Exclude the matching tables
+                    filteredData.AddRange(sortedTables.Where(i => matchTables.All(e => i.TableName != e.TableName)));
+                }
+
+                return filteredData
+                    .DistinctBy(y => y.TableName);
+
+                //sortedTables = sortedTables.Where(i => _configuration.ExcludeTables.All(e => i.TableName != e));
+            }
+
+            return sortedTables;
         }
 
         private static void CreateExcelTables(ExcelWorksheet worksheet, TableData tableInfo)
@@ -104,13 +162,11 @@ namespace Datask.Tool.ExcelData.Core
             //    pkCustomDataValidation.Formula.ExcelFormula = pkValidationFormula;
             //}
 
+            //Add column metadata into excel column comment section.
+            AddColumnMetaData(tableInfo, i, worksheet);
+
             if (tableInfo.Columns[i].IsForeignKey && !tableInfo.Columns[i].IsPrimaryKey)
             {
-                ExcelComment fkComment = worksheet.Cells[1, i + 1].AddComment(
-                    $"ForeignKey \n Reference table = {tableInfo.Columns[i].ReferenceTableName} \n Reference column = {tableInfo.Columns[i].ReferenceColumnName}",
-                    "Owner");
-                fkComment.AutoFit = true;
-
                 foreach (ExcelWorksheet sheet in package.Workbook.Worksheets)
                 {
                     foreach (ExcelTable table in sheet.Tables)
@@ -118,7 +174,7 @@ namespace Datask.Tool.ExcelData.Core
                         if (table.Name != tableInfo.Columns[i].ReferenceTableName)
                             continue;
 
-                        int? fkColumnPosition = table.Columns[tableInfo.Columns[i].ReferenceColumnName + " " + tableInfo.Columns[i].FormattedType]?.Id;
+                        int? fkColumnPosition = table.Columns[tableInfo.Columns[i].ReferenceColumnName]?.Id;
                         if (fkColumnPosition is null)
                             continue;
 
@@ -133,11 +189,6 @@ namespace Datask.Tool.ExcelData.Core
                         fkDataValidation.Formula.ExcelFormula = validationFormula;
                     }
                 }
-            }
-            else if (tableInfo.Columns[i].IsPrimaryKey)
-            {
-                ExcelComment? cellMetaDataComment = worksheet.Cells[1, i + 1].AddComment("PrimaryKey", "Owner");
-                cellMetaDataComment.AutoFit = true;
             }
 
             if (tableInfo.Columns[i].Type.Equals("datetime", StringComparison.OrdinalIgnoreCase))
@@ -157,7 +208,7 @@ namespace Datask.Tool.ExcelData.Core
                 bitDataValidation.Formula.Values.Add("1");
             }
             else if (tableInfo.Columns[i].Type.Contains("varchar", StringComparison.OrdinalIgnoreCase) &&
-                     tableInfo.Columns[i].MaxLength > 0 && !tableInfo.Columns[i].IsPrimaryKey)
+                     tableInfo.Columns[i].MaxLength > 0)
             {
                 //Add data validations for maxstring length
                 IExcelDataValidationInt? stringLenValidation = worksheet.DataValidations.AddTextLengthValidation(columnDataRange);
@@ -170,7 +221,7 @@ namespace Datask.Tool.ExcelData.Core
                 stringLenValidation.Formula2.Value = tableInfo.Columns[i].MaxLength;
             }
             else if (tableInfo.Columns[i].Type.Contains("int", StringComparison.OrdinalIgnoreCase) &&
-                     !tableInfo.Columns[i].IsForeignKey && !tableInfo.Columns[i].IsPrimaryKey)
+                     !tableInfo.Columns[i].IsForeignKey)
             {
                 //Add data validations for integer
                 IExcelDataValidationInt? intDataValidation = worksheet.DataValidations.AddIntegerValidation(columnDataRange);
@@ -180,6 +231,15 @@ namespace Datask.Tool.ExcelData.Core
                 intDataValidation.Formula.Value = 0;
                 intDataValidation.Formula2.Value = int.MaxValue;
             }
+        }
+
+        private static void AddColumnMetaData(TableData tableInfo, int i, ExcelWorksheet worksheet)
+        {
+            string columnMetadata =
+                JsonSerializer.Serialize(tableInfo.Columns[i], new JsonSerializerOptions { WriteIndented = true });
+
+            ExcelComment colComment = worksheet.Cells[1, i + 1].AddComment(columnMetadata, "Owner");
+            colComment.AutoFit = true;
         }
     }
 }

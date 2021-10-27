@@ -1,9 +1,12 @@
-﻿namespace Datask.Tool.ExcelData.Core.DbTableSorter
+﻿using System.Text.Json.Serialization;
+
+namespace Datask.Tool.ExcelData.Core.DbTableSorter
 {
     public class ColumnData
     {
         public string Name { get; init; } = null!;
 
+        [JsonIgnore]
         public int OrdinalPosition { get; init; }
 
         public string Type { get; init; } = null!;
@@ -19,7 +22,5 @@
         public string? ReferenceTableName { get; init; }
 
         public string? ReferenceColumnName { get; init; }
-
-        public string FormattedType { get; set; } = null!;
     }
 }

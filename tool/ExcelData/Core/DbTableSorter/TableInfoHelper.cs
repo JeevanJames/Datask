@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Globalization;
+using System.IO;
 using System.Linq;
-using System.Text;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Datask.Tool.ExcelData.Core.DbTableSorter
@@ -24,14 +25,14 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
             using DataSet dataSet = new();
             await using var sqlConnection = new SqlConnection(configuration.ConnectionString);
 
-            string includeSchemas = string.Join(',', configuration.IncludeSchemas.Select(x => $"'{x}'"));
-            using SqlDataAdapter dataAdapter = new(GetSqlStatementForTableInformation(includeSchemas), sqlConnection);
+            //string includeSchemas = string.Join(',', configuration.IncludeSchemas.Select(x => $"'{x}'"));
+            using SqlDataAdapter dataAdapter = new(ReadResource("Datask.Tool.ExcelData.Core.Scripts.BaseTables.sql"), sqlConnection);
             dataAdapter.Fill(dataSet, "Tables");
 
-            using SqlDataAdapter refDataAdapter = new(GetSqlStatementForReferences(includeSchemas), sqlConnection);
+            using SqlDataAdapter refDataAdapter = new(ReadResource("Datask.Tool.ExcelData.Core.Scripts.TableReferenceSchema.sql"), sqlConnection);
             refDataAdapter.Fill(dataSet, "Reference");
 
-            using SqlDataAdapter colDataAdapter = new(GetSqlStatementForTableColumnInformation(includeSchemas), sqlConnection);
+            using SqlDataAdapter colDataAdapter = new(ReadResource("Datask.Tool.ExcelData.Core.Scripts.TableColumnSchema.sql"), sqlConnection);
             colDataAdapter.Fill(dataSet, "Columns");
 
             // Get DataColumn Information
@@ -42,6 +43,8 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
             // Create Table Relationship
             DataRelation dataRelation = new("tableRelation", colTblTableName, colRefReferenceTableName, true);
             dataSet.Relations.Add(dataRelation);
+
+            List<TableData> tableDataList = new();
 
             // Add All Tables to a List
             foreach (DataRow tableRow in dataSet.Tables["Tables"]?.Rows!)
@@ -70,137 +73,80 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
                         OrdinalPosition = Convert.ToInt32(colRows["ORDINAL_POSITION"], new NumberFormatInfo()),
                     };
 
-                    colData.FormattedType = colData.MaxLength != 0
-                        ? $"({colData.Type}({colData.MaxLength}))"
-                        : $"({colData.Type})";
-
                     tableData.Columns.Add(colData);
                 }
+
+                tableDataList.Add(tableData);
 
                 sortedList.Add(tableData.TableName, tableData);
             }
 
             // Find Reference Table Information For Each Table
-            foreach (DataRow row in dataSet.Tables["Tables"]?.Rows!)
+            foreach (DataRow row in dataSet.Tables["Reference"]?.Rows!)
             {
-                TableData tableInfo = sortedList[row[colTblTableName]?.ToString()!];
+                TableData? tableInfo = tableDataList.Find(t => t.TableName == row[colRefTableName].ToString()!);
 
-                // Get the Reference Tables
-                foreach (DataRow childRow in row.GetChildRows(dataRelation))
+                if (tableInfo == null)
+                    continue;
+
+                TableData? referenceTableData = tableDataList.Find(t => t.TableName == row[colRefReferenceTableName!].ToString());
+
+                if (referenceTableData != null)
                 {
-                    string childTable = childRow[colRefTableName]?.ToString()!;
-
-                    if (childTable.Equals(tableInfo.TableName, StringComparison.OrdinalIgnoreCase))
-                        continue;
-
-                    // Add Child Table to Current Table
-                    if (tableInfo.ReferencedBy.Contains(childTable))
-                        continue;
-
-                    tableInfo.ReferencedBy.Add(childTable);
-
-                    // Add Reference Type Enumeration For Both Referenced and Referenced By Tables
-                    tableInfo.AddRefType(RefType.ReferencedBy);
-                    sortedList[childTable].AddRefType(RefType.References);
+                    tableInfo.References.Add(new References()
+                    {
+                        ForeignKey = row["ColumnName"].ToString()!,
+                        ReferenceTable = referenceTableData,
+                    });
                 }
-
-                // Sort Referenced By Tables By Name
-                tableInfo.ReferencedBy.ToList().Sort();
             }
 
-            // Perform the Sort with the Custom Sorter
-            List<TableData> list = new(sortedList.Values);
-            list.Sort(new TableDataComparer(sortedList));
+            //Perform Topological sorting
+            var sortOrder = GetTopologicalSortOrder(tableDataList).Reverse().ToList();
 
-            return list;
+            return sortOrder.ConvertAll(t => tableDataList[t]);
         }
 
-        private static string GetSqlStatementForTableColumnInformation(string includeSchemas)
+        private static IEnumerable<int> GetTopologicalSortOrder(List<TableData> tables)
         {
-            StringBuilder sb = new();
-            sb.Append("select schema_name(tab.schema_id) + '.' + tab.name as TableName, ");
-            sb.Append("col.column_id, ");
-            sb.Append("col.name as ColumnName, ");
-            sb.Append("col_s.DATA_TYPE, col_s.ORDINAL_POSITION, ");
-            sb.Append("col_s.CHARACTER_MAXIMUM_LENGTH as MaxLength, ");
-            sb.Append("col_s.is_nullable, ");
-            sb.Append("ku.CONSTRAINT_NAME as PrimaryKeyCol, ");
-            sb.Append("case when fk.object_id is not null then '>-' else null end as rel, ");
-            sb.Append("schema_name(pk_tab.schema_id) + '.' + pk_tab.name as ReferenceTableName, ");
-            sb.Append("pk_col.name as ReferenceColumnName, ");
-            sb.Append("fk.name as fk_constraint_name ");
-            sb.Append("from sys.tables tab ");
-            sb.Append("inner join INFORMATION_SCHEMA.COLUMNS col_s on col_s.TABLE_NAME = tab.name and col_s.TABLE_SCHEMA = schema_name(tab.schema_id) ");
-            sb.Append("left outer join sys.columns col ");
-            sb.Append("on col.object_id = tab.object_id and col.Name = col_s.COLUMN_NAME ");
-            sb.Append("left join INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS ku on ku.COLUMN_NAME = col_s.COLUMN_NAME and ku.TABLE_NAME = col_s.TABLE_NAME and ku.TABLE_SCHEMA = col_s.TABLE_SCHEMA ");
-            sb.Append("and ku.CONSTRAINT_NAME like '%PK%' ");
-            sb.Append("left outer join sys.foreign_key_columns fk_cols ");
-            sb.Append("on fk_cols.parent_object_id = tab.object_id ");
-            sb.Append("and fk_cols.parent_column_id = col.column_id ");
-            sb.Append("left outer join sys.foreign_keys fk ");
-            sb.Append("on fk.object_id = fk_cols.constraint_object_id ");
-            sb.Append("left outer join sys.tables pk_tab ");
-            sb.Append("on pk_tab.object_id = fk_cols.referenced_object_id ");
-            sb.Append("left outer join sys.columns pk_col ");
-            sb.Append("on pk_col.column_id = fk_cols.referenced_column_id ");
-            sb.Append("and pk_col.object_id = fk_cols.referenced_object_id ");
+            TableSorter tableSorter = new(tables.Count);
+            Dictionary<string, int> indexes = new();
 
-            if (!string.IsNullOrEmpty(includeSchemas))
-                sb.Append($"where  SCHEMA_NAME (tab.schema_id) in ({includeSchemas})");
-            sb.Append("order by schema_name(tab.schema_id) + '.' + tab.name, col.column_id ");
+            //add vertices
+            for (int i = 0; i < tables.Count; i++)
+            {
+                indexes[tables[i].TableName.ToLower()] = tableSorter.AddVertex(i);
+            }
 
-            return sb.ToString();
+            //add edges
+            for (int i = 0; i < tables.Count; i++)
+            {
+                var referenceTables = tables[i].References.Select(r => r.ReferenceTable.TableName).ToList();
+                if (!referenceTables.Any())
+                    continue;
+
+                foreach (string t in referenceTables)
+                {
+                    tableSorter.AddEdge(i, indexes[t.ToLower()]);
+                }
+            }
+
+            int[] result = tableSorter.Sort();
+            return result;
         }
 
-        private static string GetSqlStatementForTableInformation(string includeSchemas)
+        public static string ReadResource(string resourceName)
         {
-            StringBuilder sb = new();
-
-            sb.Append("SELECT TABLE_SCHEMA + '.' + TABLE_NAME AS TableName ");
-            sb.Append("FROM INFORMATION_SCHEMA.Tables ");
-            sb.Append("WHERE TABLE_TYPE='BASE TABLE' ");
-            if (!string.IsNullOrEmpty(includeSchemas))
-                sb.Append($"AND TABLE_SCHEMA in ({includeSchemas})");
-            sb.Append("ORDER BY TableName ");
-
-            return sb.ToString();
+            var assembly = Assembly.GetExecutingAssembly();
+#pragma warning disable CS8604 // Possible null reference argument.
+            StreamReader reader = new(assembly.GetManifestResourceStream(resourceName));
+#pragma warning restore CS8604 // Possible null reference argument.
+            return reader.ReadToEnd();
         }
 
-        private static string GetSqlStatementForReferences(string includeSchemas)
+        public static IEnumerable<T> DistinctBy<T, TKey>(this IEnumerable<T> items, Func<T, TKey> property)
         {
-            StringBuilder sb = new();
-
-            sb.Append("SELECT  ");
-            sb.Append("    OBJECT_SCHEMA_NAME (fkey.referenced_object_id) + \'.\' +  ");
-            sb.Append("        OBJECT_NAME (fkey.referenced_object_id) AS ReferenceTableName ");
-            sb.Append("    ,COL_NAME(fcol.referenced_object_id, fcol.referenced_column_id) AS ReferenceColumnName ");
-            sb.Append("    ,OBJECT_SCHEMA_NAME (fkey.parent_object_id) + \'.\' +  ");
-            sb.Append("        OBJECT_NAME(fkey.parent_object_id) AS TableName ");
-            sb.Append("    ,COL_NAME(fcol.parent_object_id, fcol.parent_column_id) AS ColumnName ");
-            sb.Append("FROM sys.foreign_keys AS fkey ");
-            sb.Append("    INNER JOIN sys.foreign_key_columns AS fcol ON fkey.OBJECT_ID = fcol.constraint_object_id ");
-            if (!string.IsNullOrEmpty(includeSchemas))
-                sb.Append($"where  OBJECT_SCHEMA_NAME (fkey.parent_object_id) in ({includeSchemas})");
-            sb.Append("ORDER BY ReferenceTableName, ReferenceColumnName, TableName, ColumnName ");
-
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// AddRefType.
-        /// </summary>
-        /// <param name="tableData">tableData.</param>
-        /// <param name="referenceType">referenceType.</param>
-        private static void AddRefType(this TableData tableData, RefType referenceType)
-        {
-            if (tableData.RefType == RefType.RefAndRefBy)
-                return;
-
-            tableData.RefType |= referenceType;
-
-            if (tableData.RefType == (RefType.ReferencedBy | RefType.References))
-                tableData.RefType = RefType.RefAndRefBy;
+            return items.GroupBy(property).Select(x => x.First());
         }
     }
 }

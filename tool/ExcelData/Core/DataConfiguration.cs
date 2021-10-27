@@ -9,6 +9,8 @@ namespace Datask.Tool.ExcelData.Core
 
         public FileInfo FilePath { get; init; } = null!;
 
-        public IList<string> IncludeSchemas { get; } = new List<string>();
+        public IList<string> IncludeTables { get; } = new List<string>();
+
+        public IList<string> ExcludeTables { get; } = new List<string>();
     }
 }

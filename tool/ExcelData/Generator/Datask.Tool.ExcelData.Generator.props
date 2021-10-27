@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Project>
+    <ItemGroup>
+        <CompilerVisibleProperty Include="RootNamespace" />
+        <CompilerVisibleProperty Include="DataFlavours" />
+        <CompilerVisibleProperty Include="TestDataClassName" />
+        <CompilerVisibleProperty Include="DbContextName" />
+        <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="Type" />
+    </ItemGroup>
+</Project>

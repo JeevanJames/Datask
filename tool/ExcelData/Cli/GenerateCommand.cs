@@ -27,7 +27,7 @@ namespace Datask.Tool.ExcelData
 
         [Option("include", "i", Optional = true, MultipleOccurrences = true)]
         [OptionHelp("One or more regular expressions specifying the tables to include.This should match the <schema>.<table> format.")]
-        public IList<string> IncludeSchema { get; } = new List<string>();
+        public IList<string> IncludeTables { get; } = new List<string>();
 
         [Option("exclude", "e", Optional = true, MultipleOccurrences = true)]
         [OptionHelp("One or more regular expressions specifying the tables to exclude.This should match the <schema>.<table> format.Tables are excluded after considering the tables to include.")]
@@ -47,7 +47,8 @@ namespace Datask.Tool.ExcelData
 
             DataConfiguration configuration = new() { ConnectionString = ConnectionString, FilePath = ExcelFile, };
 
-            configuration.IncludeSchemas.AddRange(IncludeSchema.Distinct());
+            configuration.IncludeTables.AddRange(IncludeTables.Distinct());
+            configuration.ExcludeTables.AddRange(ExcludeTables.Distinct());
 
             DataBuilder builder = new(configuration);
             builder.OnStatus += (_, args) =>
@@ -55,9 +56,11 @@ namespace Datask.Tool.ExcelData
                 ctx.Status(args.Message ?? string.Empty);
                 ctx.Refresh();
             };
-            await builder.ExportExcel().ConfigureAwait(false);
 
-            AnsiConsole.MarkupLine($"The file {ExcelFile.FullName} generated successfully.");
+            if (await builder.ExportExcel().ConfigureAwait(false))
+                AnsiConsole.MarkupLine($"The file {ExcelFile.FullName} generated successfully.");
+            else
+                AnsiConsole.MarkupLine("No table data to export.");
 
             return 0;
         }

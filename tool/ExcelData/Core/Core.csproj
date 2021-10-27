@@ -9,6 +9,18 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <None Remove="Scripts\BaseTables.sql" />
+      <None Remove="Scripts\TableColumnSchema.sql" />
+      <None Remove="Scripts\TableReferenceSchema.sql" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="Scripts\BaseTables.sql" />
+      <EmbeddedResource Include="Scripts\TableColumnSchema.sql" />
+      <EmbeddedResource Include="Scripts\TableReferenceSchema.sql" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="EPPlus" Version="4.5.3.3" />
         <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
     </ItemGroup>
