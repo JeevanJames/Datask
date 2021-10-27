@@ -43,6 +43,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Generator", "tool\ExcelData
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Generator.TestHarness", "tool\ExcelData\Generator.TestHarness\Generator.TestHarness.csproj", "{C9B13F51-A0B8-4015-9A64-D60F5F41E338}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DeployDacpac", "DeployDacpac", "{F1B1A86B-916C-4E4F-AAF9-6C9A114AF62D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cli", "tool\DeployDacpac\Cli\Cli.csproj", "{17451553-A4EE-4597-B6E2-569A192BB1DC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
