@@ -71,6 +71,7 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
                             : 0,
                         Type = colRows["DATA_TYPE"].ToString()!,
                         OrdinalPosition = Convert.ToInt32(colRows["ORDINAL_POSITION"], new NumberFormatInfo()),
+                        IsIdentity = Convert.ToBoolean(colRows["IsIdentity"]),
                     };
 
                     tableData.Columns.Add(colData);

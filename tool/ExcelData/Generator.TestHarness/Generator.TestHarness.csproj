@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
@@ -11,18 +11,20 @@
 
         <!-- SourceGenerator settings-->
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-        <DataFlavours>Seed, IntegrationTesting, Demo</DataFlavours>
-        <TestDataClassName>TestData</TestDataClassName>
-        <DbContextName>EolContext</DbContextName>
         <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\SG</CompilerGeneratedFilesOutputPath>
     </PropertyGroup>
 
     <ItemGroup>
         <None Remove="Configuration.xlsx" />
+        <None Remove="dataConfig.json" />
     </ItemGroup>
 
     <ItemGroup>
-        <AdditionalFiles Include="Configuration.xlsx" Type="DataBuilder" />
+        <AdditionalFiles Include="dataConfig.json" Type="DataBuilderConfiguration" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="Configuration.xlsx" />
     </ItemGroup>
 
     <ItemGroup>
@@ -39,7 +41,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Generator\Generator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer"/>
+        <ProjectReference Include="..\Generator\Generator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     </ItemGroup>
 
     <!--Manually reference the generator props because we locally reference the generator. When added via NuGet this happens automatically-->

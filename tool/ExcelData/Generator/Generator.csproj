@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
@@ -22,30 +22,85 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.8.0" />
+        <PackageReference Include="System.Text.Encodings.Web" Version="5.0.0" GeneratePathProperty="true" PrivateAssets="all" />
+        <PackageReference Include="System.Text.Json" Version="5.0.0" GeneratePathProperty="true" PrivateAssets="all" />
+
+        <PackageReference Include="NPOI" Version="2.5.5" GeneratePathProperty="true" PrivateAssets="all"/>
+        <!--<PackageReference Include="NPOI.OOXML" Version="2.5.5" GeneratePathProperty="true" PrivateAssets="all"/>-->
+
+        <!--<PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0" GeneratePathProperty="true" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.0.0" GeneratePathProperty="true" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="3.1.0.0" GeneratePathProperty="true" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="3.1.0.0" GeneratePathProperty="true" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.0.0" GeneratePathProperty="true" PrivateAssets="all" />
+        <PackageReference Include="EPPlus" Version="5.0.3" GeneratePathProperty="true" PrivateAssets="all" />-->
     </ItemGroup>
 
     <PropertyGroup>
         <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
     </PropertyGroup>
 
-    <Target Name="GetDependencyTargetPaths">
+    <Target Name="GetDependencyTargetPaths" AfterTargets="ResolvePackageDependenciesForBuild">
+        <ItemGroup>
+            <TargetPathWithTargetPlatformMoniker Include="@(ResolvedCompileFileDefinitions)" IncludeRuntimeDependency="false" />
+        </ItemGroup>
+    </Target>
+
+    <!--<Target Name="GetDependencyTargetPaths">
         <ItemGroup>
             <TargetPathWithTargetPlatformMoniker Include="$(PkgExcelDataReader)\lib\netstandard2.0\ExcelDataReader.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PkgExcelDataReader_DataSet)\lib\netstandard2.0\ExcelDataReader.DataSet.dll" IncludeRuntimeDependency="false" />
             <TargetPathWithTargetPlatformMoniker Include="$(PkgDotLiquid)\lib\netstandard2.0\DotLiquid.dll" IncludeRuntimeDependency="false" />
+            <TargetPathWithTargetPlatformMoniker Include="$(PkgSystem_Text_Json)\lib\netstandard2.0\System.Text.Json.dll" IncludeRuntimeDependency="false" />
+            <TargetPathWithTargetPlatformMoniker Include="$(PkgSystem_Text_Encodings_Web)\lib\netstandard2.0\System.Text.Encodings.Web.dll" IncludeRuntimeDependency="false" />
+
+            <TargetPathWithTargetPlatformMoniker Include="$(PkgNPOI)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+            --><!--<TargetPathWithTargetPlatformMoniker Include="$(PkgNPOI)\lib\netstandard2.0\NPOI.OOXML.dll" IncludeRuntimeDependency="false" />--><!--
+            --><!--<TargetPathWithTargetPlatformMoniker Include="$(PkgNPOI_OOXML)\lib\netstandard2.0\NPOI.OOXML.dll" IncludeRuntimeDependency="false" />--><!--
+
+            --><!--<TargetPathWithTargetPlatformMoniker Include="$(PkgEPPlus)\lib\netstandard2.0\EPPlus.dll" IncludeRuntimeDependency="false" />
+            <TargetPathWithTargetPlatformMoniker Include="$(PkgSystem_Text_Encoding_CodePages)\lib\netstandard2.0\System.Text.Encoding.CodePages.dll" IncludeRuntimeDependency="false" />
+            <TargetPathWithTargetPlatformMoniker Include="$(PkgMicrosoft_Extensions_Configuration)\lib\netstandard2.0\Microsoft.Extensions.Configuration.dll" IncludeRuntimeDependency="false" />
+            <TargetPathWithTargetPlatformMoniker Include="$(PkgMicrosoft_Extensions_Configuration_Abstractions)\lib\netstandard2.0\Microsoft.Extensions.Configuration.Abstractions.dll" IncludeRuntimeDependency="false" />
+            <TargetPathWithTargetPlatformMoniker Include="$(PkgMicrosoft_Extensions_Configuration_FileExtensions)\lib\netstandard2.0\Microsoft.Extensions.Configuration.FileExtensions.dll" IncludeRuntimeDependency="false" />
+            <TargetPathWithTargetPlatformMoniker Include="$(PkgMicrosoft_Extensions_Configuration_Json)\lib\netstandard2.0\Microsoft.Extensions.Configuration.Json.dll" IncludeRuntimeDependency="false" />--><!--
         </ItemGroup>
-    </Target>
+    </Target>-->
 
     <ItemGroup>
         <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
         <None Include="$(PkgExcelDataReader)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
         <None Include="$(PkgExcelDataReader_DataSet)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
         <None Include="$(PkgDotLiquid)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(PkgSystem_Text_Json)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(PkgSystem_Text_Encodings_Web)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+        <None Include="$(PkgNPOI)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+        <!--<None Include="$(PkgEPPlus)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(PkgSystem_Text_Encoding_CodePages)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(PkgMicrosoft_Extensions_Configuration)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(PkgMicrosoft_Extensions_Configuration_Abstractions)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(PkgMicrosoft_Extensions_Configuration_FileExtensions)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(PkgMicrosoft_Extensions_Configuration_Json)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />-->
+
         <EmbeddedResource Include="Templates\DataExtensionTemplate.liquid" />
 
         <None Include="$(OutputPath)\ExcelDataReader.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
         <None Include="$(OutputPath)\ExcelDataReader.DataSet.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
         <None Include="$(OutputPath)\DotLiquid.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)\System.Text.Json.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)\System.Text.Encodings.Web.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+        <None Include="$(OutputPath)\NPOI.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)\NPOI.OOXML.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+        <!--<None Include="$(OutputPath)\EPPlus.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)\System.Text.Encoding.CodePages.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)\Microsoft.Extensions.Configuration.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)\Microsoft.Extensions.Configuration.Abstractions.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)\Microsoft.Extensions.Configuration.FileExtensions.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)\Microsoft.Extensions.Configuration.Json.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />-->
     </ItemGroup>
 
     <ItemGroup>

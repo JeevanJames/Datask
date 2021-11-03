@@ -6,6 +6,8 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
     {
         public string Name { get; init; } = null!;
 
+        public bool IsIdentity { get; set; }
+
         [JsonIgnore]
         public int OrdinalPosition { get; init; }
 
