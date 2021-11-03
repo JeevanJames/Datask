@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
+
+using Datask.Tool.ExcelData.Core.Scripts;
 
 namespace Datask.Tool.ExcelData.Core.DbTableSorter
 {
@@ -19,44 +19,50 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
             if (configuration is null)
                 throw new ArgumentNullException(nameof(configuration));
 
-            SortedList<string, TableData> sortedList = new();
-
             //Retrieve Tables, Columns and Foreign Key Relationships
-            using DataSet dataSet = new();
-            await using var sqlConnection = new SqlConnection(configuration.ConnectionString);
+            await using SqlConnection connection = new(configuration.ConnectionString);
 
             //string includeSchemas = string.Join(',', configuration.IncludeSchemas.Select(x => $"'{x}'"));
-            using SqlDataAdapter dataAdapter = new(ReadResource("Datask.Tool.ExcelData.Core.Scripts.BaseTables.sql"), sqlConnection);
-            dataAdapter.Fill(dataSet, "Tables");
+            using SqlDataAdapter tablesAdapter = new(await SqlScripts.BaseTables().ConfigureAwait(false), connection);
+            DataTable tablesDt = new();
+            tablesAdapter.Fill(tablesDt);
 
-            using SqlDataAdapter refDataAdapter = new(ReadResource("Datask.Tool.ExcelData.Core.Scripts.TableReferenceSchema.sql"), sqlConnection);
-            refDataAdapter.Fill(dataSet, "Reference");
+            using SqlDataAdapter referencesAdapter = new(await SqlScripts.TableReferenceSchema().ConfigureAwait(false),
+                connection);
+            DataTable referencesDt = new();
+            referencesAdapter.Fill(referencesDt);
 
-            using SqlDataAdapter colDataAdapter = new(ReadResource("Datask.Tool.ExcelData.Core.Scripts.TableColumnSchema.sql"), sqlConnection);
-            colDataAdapter.Fill(dataSet, "Columns");
+            using SqlDataAdapter columnsAdapter = new(await SqlScripts.TableColumnSchema().ConfigureAwait(false),
+                connection);
+            DataTable columnsDt = new();
+            columnsAdapter.Fill(columnsDt);
+
+            using DataSet dataSet = new();
+            dataSet.Tables.AddRange(new[] { tablesDt, referencesDt, columnsDt });
 
             // Get DataColumn Information
-            DataColumn colTblTableName = dataSet.Tables["Tables"]?.Columns["TableName"]!;
-            DataColumn colRefReferenceTableName = dataSet.Tables["Reference"]?.Columns["ReferenceTableName"]!;
-            DataColumn colRefTableName = dataSet.Tables["Reference"]?.Columns["TableName"]!;
+            DataColumn colTblTableName = tablesDt.Columns["TableName"]!;
+            DataColumn colRefReferenceTableName = referencesDt.Columns["ReferenceTableName"]!;
+            DataColumn colRefTableName = referencesDt.Columns["TableName"]!;
 
             // Create Table Relationship
             DataRelation dataRelation = new("tableRelation", colTblTableName, colRefReferenceTableName, true);
             dataSet.Relations.Add(dataRelation);
 
+            SortedList<string, TableData> sortedList = new();
             List<TableData> tableDataList = new();
 
             // Add All Tables to a List
-            foreach (DataRow tableRow in dataSet.Tables["Tables"]?.Rows!)
+            foreach (DataRow tableRow in tablesDt.Rows)
             {
                 TableData tableData = new()
                 {
                     TableName = tableRow[colTblTableName]?.ToString()!,
                 };
 
-                DataRow[]? dataRows = dataSet.Tables["Columns"]?.Select($"TableName = '{tableData.TableName}'");
+                DataRow[] dataRows = columnsDt.Select($"TableName = '{tableData.TableName}'");
 
-                foreach (DataRow colRows in dataRows!)
+                foreach (DataRow colRows in dataRows)
                 {
                     ColumnData colData = new()
                     {
@@ -82,7 +88,7 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
             }
 
             // Find Reference Table Information For Each Table
-            foreach (DataRow row in dataSet.Tables["Reference"]?.Rows!)
+            foreach (DataRow row in referencesDt.Rows)
             {
                 TableData? tableInfo = tableDataList.Find(t => t.TableName == row[colRefTableName].ToString()!);
 
@@ -93,7 +99,7 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
 
                 if (referenceTableData != null)
                 {
-                    tableInfo.References.Add(new References()
+                    tableInfo.References.Add(new References
                     {
                         ForeignKey = row["ColumnName"].ToString()!,
                         ReferenceTable = referenceTableData,
@@ -133,15 +139,6 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
 
             int[] result = tableSorter.Sort();
             return result;
-        }
-
-        public static string ReadResource(string resourceName)
-        {
-            var assembly = Assembly.GetExecutingAssembly();
-#pragma warning disable CS8604 // Possible null reference argument.
-            StreamReader reader = new(assembly.GetManifestResourceStream(resourceName));
-#pragma warning restore CS8604 // Possible null reference argument.
-            return reader.ReadToEnd();
         }
 
         public static IEnumerable<T> DistinctBy<T, TKey>(this IEnumerable<T> items, Func<T, TKey> property)
