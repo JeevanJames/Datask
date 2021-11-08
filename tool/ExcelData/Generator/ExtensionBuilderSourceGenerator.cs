@@ -10,8 +10,13 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+
+using CodeBits;
+
 using Datask.Tool.ExcelData.Generator.Extensions;
+
 using DotLiquid;
+
 using ExcelDataReader;
 
 using Microsoft.CodeAnalysis;
@@ -51,11 +56,11 @@ namespace Datask.Tool.ExcelData.Generator
             {
                 ReadExcelData(context);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
-            catch (Exception exception)
-#pragma warning restore CA1031 // Do not catch general exception types
+#pragma warning disable RCS1075 // Avoid empty catch clause that catches System.Exception.
+            catch (Exception)
+#pragma warning restore RCS1075 // Avoid empty catch clause that catches System.Exception.
             {
-                context.ReportDiagnostic(Diagnostic.Create(_dataBuilderExtensionErrorDescriptor, Location.None, $"{exception.Message} {exception.InnerException}"));
+                //context.ReportDiagnostic(Diagnostic.Create(_dataBuilderExtensionErrorDescriptor, Location.None, $"{exception.Message} {exception.InnerException}"));
             }
         }
 
@@ -241,7 +246,7 @@ namespace Datask.Tool.ExcelData.Generator
         /// <returns>Template.</returns>
         private static async Task<Template> ParseTemplate(string templateName, Assembly assembly, Type type)
         {
-            string modelTemplate = await assembly.LoadResourceAsTextAsync(type, $"Templates.{templateName}.liquid").ConfigureAwait(false);
+            string modelTemplate = await assembly.LoadResourceAsString(type, $"Templates.{templateName}.liquid").ConfigureAwait(false);
             var template = Template.Parse(modelTemplate);
             return template;
         }

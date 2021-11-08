@@ -6,7 +6,8 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-using Datask.Common.Events;
+using CodeBits;
+
 using Datask.Tool.ExcelData.Core.DbTableSorter;
 using Datask.Tool.ExcelData.Core.Events;
 
@@ -18,7 +19,7 @@ using OfficeOpenXml.Table;
 
 namespace Datask.Tool.ExcelData.Core
 {
-    public class DataBuilder
+    public sealed class DataBuilder
     {
 #pragma warning disable S3264 // Events should be invoked
         public event EventHandler<StatusEventArgs<StatusEvents>> OnStatus = null!;
@@ -40,14 +41,14 @@ namespace Datask.Tool.ExcelData.Core
 
         private async Task<bool> FillExcelData(ExcelPackage package)
         {
-            IEnumerable<TableData>? sortedTables = await TableInfoHelper.GetTableList(_configuration).ConfigureAwait(false);
+            IEnumerable<TableData> sortedTables = await TableInfoHelper.GetTableList(_configuration).ConfigureAwait(false);
 
             sortedTables = FilterSortedTables(sortedTables).ToList();
 
             if (!sortedTables.Any())
                 return false;
 
-            foreach (TableData? tableInfo in sortedTables)
+            foreach (TableData tableInfo in sortedTables)
             {
                 OnStatus.Fire(StatusEvents.Generate,
                     new { Table = tableInfo.TableName },
@@ -63,7 +64,7 @@ namespace Datask.Tool.ExcelData.Core
                     ? $"{tableInfo.TableName.Substring(0, 24)}...{random.Next(1, 100)}"
                     : tableInfo.TableName;
 
-                ExcelWorksheet? worksheet = package.Workbook.Worksheets.Add(workSheetName);
+                ExcelWorksheet worksheet = package.Workbook.Worksheets.Add(workSheetName);
 
                 for (int i = 0; i < tableInfo.Columns.Count; i++)
                 {
@@ -185,7 +186,7 @@ namespace Datask.Tool.ExcelData.Core
                             $"='{tableInfo.Columns[i].ReferenceTableName}'!${fkColumnLetter}$2:${fkColumnLetter}${ExcelPackage.MaxRows}";
 
                         fkDataValidation.ShowErrorMessage = true;
-                        fkDataValidation.Error = $"The value cannot be empty.";
+                        fkDataValidation.Error = "The value cannot be empty.";
                         fkDataValidation.Formula.ExcelFormula = validationFormula;
                     }
                 }
