@@ -4,6 +4,8 @@ using ConsoleFx.CmdLine;
 using ConsoleFx.CmdLine.ErrorHandling;
 using ConsoleFx.CmdLine.Help;
 
+using Spectre.Console;
+
 namespace Datask.Tool.ExcelData
 {
     public sealed class Program : ConsoleProgram
@@ -12,7 +14,11 @@ namespace Datask.Tool.ExcelData
         {
             var program = new Program();
             program.WithHelpBuilder(() => new DefaultColorHelpBuilder("help", "h"));
-            program.HandleErrorsWith<DefaultErrorHandler>();
+            program.HandleErrorsWith(ex =>
+            {
+                AnsiConsole.WriteException(ex);
+                return 1;
+            });
             program.ScanEntryAssemblyForCommands();
 #if DEBUG_TOOL || DEBUG
             return await program.RunDebugAsync(condition: () => true).ConfigureAwait(false);

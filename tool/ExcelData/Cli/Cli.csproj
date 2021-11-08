@@ -29,10 +29,13 @@
         <PackageReference Include="ConsoleFx.CmdLine.Program" Version="2.0.0-build.420" />
         <PackageReference Include="ConsoleFx.Prompter" Version="2.0.0-build.420" />
         <PackageReference Include="Spectre.Console" Version="0.42.1-preview.0.2" />
+        <PackageReference Include="System.Linq.Async" Version="5.0.0" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\..\..\common\Cli\Cli.csproj" />
+        <ProjectReference Include="..\..\..\provider\Providers\Providers.csproj" />
+        <ProjectReference Include="..\..\..\provider\SqlServer\SqlServer.csproj" />
         <ProjectReference Include="..\Core\Core.csproj" />
     </ItemGroup>
 
