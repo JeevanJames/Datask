@@ -3,7 +3,7 @@
 using System;
 using System.Data;
 using System.Threading.Tasks;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 
 namespace {{d.namespace}}
 {
@@ -25,7 +25,7 @@ namespace {{d.namespace}}
                 throw new ArgumentNullException(nameof(flavours));
 
             await using SqlConnection connection = new(connectionString);
-            await connection.OpenAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
 
             foreach (DataFlavours flavor in flavours)
             {
@@ -40,14 +40,13 @@ namespace {{d.namespace}}
                 }
             }
 
-            await connection.CloseAsync();
+            await connection.CloseAsync().ConfigureAwait(false);
         }
     }
-
-{% for flavour in d.flavours -%}
-    public static class {{flavour.name}}Data
+{% for flavour in d.flavours %}
+    internal static class {{flavour.name}}Data
     {
-        public static async Task Populate(SqlConnection connection)
+        internal static async Task Populate(SqlConnection connection)
         {
 {% for tableData in flavour.table_data -%}
 {%      if tableData.data_rows.size > 0 -%}
@@ -55,34 +54,39 @@ namespace {{d.namespace}}
 {%      endif -%}
 {% endfor -%}
         }
-
 {% for tableData in flavour.table_data -%}
-{%      if tableData.data_rows.size > 0 -%}
+{%      if tableData.data_rows.size > 0 %}
         private static async Task Populate{{tableData.name}}Data(SqlConnection connection)
         {
+            try
+            {
 {%          if tableData.contains_identity_column -%}
-             const string insertCommand =
-                "SET IDENTITY_INSERT {{tableData.name}} ON; INSERT INTO {{tableData.name}} ({% for tableColumn in tableData.table_columns -%} {{tableColumn.name}}{% if forloop.last == false -%}, {% endif -%}{% endfor -%})" +
-                "VALUES ({% for tableColumn in tableData.table_columns -%} @{{tableColumn.name}}{% if forloop.last == false -%}, {% endif -%}{% endfor -%}); SET IDENTITY_INSERT {{tableData.name}} OFF;";
-{%         else -%}
-            const string insertCommand =
-                "INSERT INTO {{tableData.name}} ({% for tableColumn in tableData.table_columns -%} {{tableColumn.name}}{% if forloop.last == false -%}, {% endif -%}{% endfor -%})" +
-                "VALUES ({% for tableColumn in tableData.table_columns -%} @{{tableColumn.name}}{% if forloop.last == false -%}, {% endif -%}{% endfor -%});";
+                await SetIdentityOn(connection, "{{tableData.name}}").ConfigureAwait(false);
 {%          endif -%}
+                const string insertCommand =
+                    "INSERT INTO {{tableData.name}} ({% for tableColumn in tableData.table_columns -%} {{tableColumn.name}}{% if forloop.last == false -%}, {% endif -%}{% endfor -%})" +
+                    "VALUES ({% for tableColumn in tableData.table_columns -%} @{{tableColumn.name}}{% if forloop.last == false -%}, {% endif -%}{% endfor -%});";
 
-            using SqlCommand command = new SqlCommand(insertCommand, connection);
+                await using SqlCommand command = new(insertCommand, connection);
 {%      for tableColumn in tableData.table_columns -%}
-            command.Parameters.Add("@{{tableColumn.name}}", @{{tableColumn.db_type}});
+                command.Parameters.Add("@{{tableColumn.name}}", @{{tableColumn.db_type}});
 {%      endfor -%}
 
 {%      for tableRows in tableData.data_rows -%}
-            await command.Execute{{tableData.name}}Data({% for rows in tableRows -%}{% assign row_index = forloop:index0 -%}{% if tableData.table_columns[row_index].db_type contains "VarChar" or tableData.table_columns[row_index].db_type contains "Xml" -%} "{{rows | replace: '\"', '\"'}}" {% else -%} {{rows}} {% endif -%} {% if forloop.last == false -%}, {% endif -%}{% endfor -%});
+                await command.Execute{{tableData.name}}Data({% for rows in tableRows -%}{% assign row_index = forloop:index0 -%}{% if tableData.table_columns[row_index].db_type contains "VarChar" or tableData.table_columns[row_index].db_type contains "Xml" -%} "{{rows | replace: '\"', '\"'}}" {% else -%} {{rows}} {% endif -%} {% if forloop.last == false -%}, {% endif -%}{% endfor -%}).ConfigureAwait(false);
 {%      endfor -%}
+            }
+            finally
+            {
+{%          if tableData.contains_identity_column -%}
+                await SetIdentityOff(connection, "{{tableData.name}}").ConfigureAwait(false);
+{%          endif -%}
+            }
 {% comment -%}
 {%      for tableColumn1 in tableData.table_columns limit:1 -%}
 {%          for row1 in tableColumn1.column_rows -%}
 {%              assign row_index = forloop:index0 -%}
-            await command.Execute{{tableData.name}}Data({% for tableColumn in tableData.table_columns -%}{% assign row_index_value = tableColumn.column_rows[row_index] -%} "{{row_index_value | replace: '"', '\"'}}"{% if forloop.last == false -%}, {% endif -%} {% endfor -%});
+            await command.Execute{{tableData.name}}Data({% for tableColumn in tableData.table_columns -%}{% assign row_index_value = tableColumn.column_rows[row_index] -%} "{{row_index_value | replace: '"', '\"'}}"{% if forloop.last == false -%}, {% endif -%} {% endfor -%}).ConfigureAwait(false);
 {%          endfor -%}
 {%      endfor -%}
 {% endcomment -%}
@@ -134,10 +138,22 @@ namespace {{d.namespace}}
             command.Parameters[{{colindex}}].Value = {{tableColumn.name}};
 {% endfor -%}
 
-            await command.ExecuteNonQueryAsync();
+            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
         }
 {%      endif -%}
 {% endfor -%}
+
+        private static async Task SetIdentityOn(SqlConnection connection, string tableName)
+        {
+            await using SqlCommand command = new("SET IDENTITY_INSERT " + tableName + " ON", connection);
+            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+        }
+
+        private static async Task SetIdentityOff(SqlConnection connection, string tableName)
+        {
+            await using SqlCommand command = new("SET IDENTITY_INSERT " + tableName + " OFF", connection);
+            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+        }
     }
 {% endfor -%}
 }

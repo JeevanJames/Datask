@@ -58,6 +58,8 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
 
                 foreach (DataRow colRows in dataRows!)
                 {
+                    if (colRows["DATA_TYPE"].ToString() == "timestamp" || colRows["DATA_TYPE"].ToString() == "rowversion")
+                        continue;
                     ColumnData colData = new()
                     {
                         Name = colRows["ColumnName"].ToString()!,
