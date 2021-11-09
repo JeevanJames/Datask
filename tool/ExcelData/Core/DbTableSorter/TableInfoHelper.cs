@@ -64,6 +64,8 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
 
                 foreach (DataRow colRows in dataRows)
                 {
+                    if (colRows["DATA_TYPE"].ToString() == "timestamp" || colRows["DATA_TYPE"].ToString() == "rowversion")
+                        continue;
                     ColumnData colData = new()
                     {
                         Name = colRows["ColumnName"].ToString()!,
@@ -77,6 +79,7 @@ namespace Datask.Tool.ExcelData.Core.DbTableSorter
                             : 0,
                         Type = colRows["DATA_TYPE"].ToString()!,
                         OrdinalPosition = Convert.ToInt32(colRows["ORDINAL_POSITION"], new NumberFormatInfo()),
+                        IsIdentity = Convert.ToBoolean(colRows["IsIdentity"]),
                     };
 
                     tableData.Columns.Add(colData);
