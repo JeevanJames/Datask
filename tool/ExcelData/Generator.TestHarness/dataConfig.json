@@ -5,15 +5,15 @@
     "Flavours": [
         {
             "Name": "Seed",
-            "ExcelPath": "C:\\MyGitRepo\\NewDatask\\Datask\\Datask\\tool\\ExcelData\\Generator.TestHarness\\Configuration.xlsx"
+            "ExcelPath": ".\\Configuration.xlsx"
         },
         {
             "Name": "Demo",
-            "ExcelPath": "C:\\MyGitRepo\\NewDatask\\Datask\\Datask\\tool\\ExcelData\\Generator.TestHarness\\Configuration.xlsx"
+            "ExcelPath": ".\\Configuration.xlsx"
         },
         {
             "Name": "Integration",
-            "ExcelPath": "C:\\MyGitRepo\\NewDatask\\Datask\\Datask\\tool\\ExcelData\\Generator.TestHarness\\Configuration.xlsx"
+            "ExcelPath": ".\\Configuration.xlsx"
         }
     ]
 }
