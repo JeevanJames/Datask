@@ -9,16 +9,14 @@ using Npgsql;
 
 namespace Datask.Providers.PostgreSql
 {
-    public sealed class PostgreSqlSchemaQueryProvider : ISchemaQueryProvider
+    public sealed class PostgreSqlSchemaQueryProvider : SchemaQueryProvider<NpgsqlConnection>
     {
-        private readonly NpgsqlConnection _connection;
-
-        internal PostgreSqlSchemaQueryProvider(NpgsqlConnection connection)
+        public PostgreSqlSchemaQueryProvider(NpgsqlConnection connection)
+            : base(connection)
         {
-            _connection = connection;
         }
 
-        public IAsyncEnumerable<TableDefinition> EnumerateTables(EnumerateTableOptions options)
+        protected override IAsyncEnumerable<TableDefinition> GetTables(EnumerateTableOptions options)
         {
             throw new NotImplementedException();
         }

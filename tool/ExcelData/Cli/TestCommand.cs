@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -38,15 +37,12 @@ namespace Datask.Tool.ExcelData
                                         $"[green]{column.Name.EscapeMarkup()}[/]{(column.IsNullable ? "*" : string.Empty)}: " +
                                         $"[white]{column.DatabaseType.EscapeMarkup()}, {column.Type.Name.EscapeMarkup()}, {column.DbType}[/]";
                         AnsiConsole.MarkupLine(format);
-                    }
-                }
 
-                if (table.ForeignKeys.Count > 0)
-                {
-                    AnsiConsole.MarkupLine("  [grey]References:[/]");
-                    foreach (ForeignKeyDefinition fk in table.ForeignKeys)
-                    {
-                        AnsiConsole.MarkupLine($"    [green]{fk.ColumnName.EscapeMarkup()}[/] ==> [white]{fk.ReferenceSchema.EscapeMarkup()}.{fk.ReferenceTable.EscapeMarkup()}.{fk.ReferenceColumn.EscapeMarkup()}[/]");
+                        if (column.ForeignKey is not null)
+                        {
+                            AnsiConsole.MarkupLine(
+                                $"        [green][[FK]][/] ==> [white]{column.ForeignKey.Schema.EscapeMarkup()}.{column.ForeignKey.Table.EscapeMarkup()}.{column.ForeignKey.Column.EscapeMarkup()}[/]");
+                        }
                     }
                 }
             }

@@ -12,7 +12,29 @@ namespace Datask.Providers
 {
     public interface ISchemaQueryProvider
     {
-        public IAsyncEnumerable<TableDefinition> EnumerateTables(EnumerateTableOptions options);
+        public IAsyncEnumerable<TableDefinition> EnumerateTables(EnumerateTableOptions? options = null);
+    }
+
+    public abstract class SchemaQueryProvider<TConnection> : ISchemaQueryProvider
+        where TConnection : IDbConnection
+    {
+        protected SchemaQueryProvider(TConnection connection)
+        {
+            Connection = connection ?? throw new ArgumentNullException(nameof(connection));
+        }
+
+        public IAsyncEnumerable<TableDefinition> EnumerateTables(EnumerateTableOptions? options = null)
+        {
+            options ??= new EnumerateTableOptions();
+            if (options.IncludeForeignKeys && !options.IncludeColumns)
+                options = options with { IncludeColumns = true };
+
+            return GetTables(options);
+        }
+
+        protected abstract IAsyncEnumerable<TableDefinition> GetTables(EnumerateTableOptions options);
+
+        protected TConnection Connection { get; }
     }
 
     public sealed record EnumerateTableOptions
@@ -59,7 +81,7 @@ namespace Datask.Providers
         {
             if (other is null)
                 return false;
-            return Name == other.ReferenceTable && Schema == other.ReferenceSchema;
+            return Name == other.Table && Schema == other.Schema;
         }
 
         public override int GetHashCode()
@@ -87,13 +109,12 @@ namespace Datask.Providers
         public bool IsNullable { get; init; }
 
         public bool IsIdentity { get; init; }
+
+        public ForeignKeyDefinition? ForeignKey { get; set; }
     }
 
-    [DebuggerDisplay("{ColumnName,nq} ==> {ReferenceSchema,nq}.{ReferenceTable,nq}.{ReferenceColumn,nq}")]
-    public sealed record ForeignKeyDefinition(string ColumnName,
-        string ReferenceSchema,
-        string ReferenceTable,
-        string ReferenceColumn);
+    [DebuggerDisplay("{Schema,nq}.{Table,nq}.{Column,nq}")]
+    public sealed record ForeignKeyDefinition(string Schema, string Table, string Column);
 
     public sealed class TableForeignKeyComparer : Comparer<TableDefinition>
     {

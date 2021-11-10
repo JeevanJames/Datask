@@ -15,35 +15,33 @@ using Microsoft.Data.SqlClient;
 
 namespace Datask.Providers.SqlServer
 {
-    public sealed class SqlServerSchemaQueryProvider : ISchemaQueryProvider
+    public sealed class SqlServerSchemaQueryProvider : SchemaQueryProvider<SqlConnection>
     {
-        private readonly SqlConnection _connection;
-
-        internal SqlServerSchemaQueryProvider(SqlConnection connection)
+        public SqlServerSchemaQueryProvider(SqlConnection connection)
+            : base(connection)
         {
-            _connection = connection;
         }
 
-        public async IAsyncEnumerable<TableDefinition> EnumerateTables(EnumerateTableOptions options)
+        protected override async IAsyncEnumerable<TableDefinition> GetTables(EnumerateTableOptions options)
         {
-            // Get all table columns, if required.
+            // Get all table columns and foreign keys, if required.
             IEnumerable<dynamic>? allTableColumns = null;
+            IEnumerable<dynamic>? allTableReferences = null;
             if (options.IncludeColumns)
             {
                 string getAllTableColumnsScript = await Script.GetAllTableColumns().ConfigureAwait(false);
-                allTableColumns = await _connection.QueryAsync(getAllTableColumnsScript).ConfigureAwait(false);
-            }
+                allTableColumns = await Connection.QueryAsync(getAllTableColumnsScript).ConfigureAwait(false);
 
-            IEnumerable<dynamic>? allTableReferences = null;
-            if (options.IncludeForeignKeys)
-            {
-                string getAllTableReferencesScript = await Script.GetAllTableReferences().ConfigureAwait(false);
-                allTableReferences = await _connection.QueryAsync(getAllTableReferencesScript).ConfigureAwait(false);
+                if (options.IncludeForeignKeys)
+                {
+                    string getAllTableReferencesScript = await Script.GetAllTableReferences().ConfigureAwait(false);
+                    allTableReferences = await Connection.QueryAsync(getAllTableReferencesScript).ConfigureAwait(false);
+                }
             }
 
             // Get all tables.
             string getTablesScript = await Script.GetTables().ConfigureAwait(false);
-            IEnumerable<dynamic> tables = await _connection.QueryAsync(getTablesScript).ConfigureAwait(false);
+            IEnumerable<dynamic> tables = await Connection.QueryAsync(getTablesScript).ConfigureAwait(false);
 
             foreach (dynamic table in tables)
             {
@@ -62,7 +60,6 @@ namespace Datask.Providers.SqlServer
                 .Where(c => tableDefn.Name.Equals((string)c.Table) && tableDefn.Schema.Equals((string)c.Schema))
                 .Select(c =>
                 {
-                    //(Type Type, DbType DbType) mappings = TypeMappings.GetMappings(c.DbDataType);
                     (Type Type, DbType DbType) mappings = TypeMappings.GetMappings(c.DbDataType);
                     return new ColumnDefinition(c.Name)
                     {
@@ -80,16 +77,19 @@ namespace Datask.Providers.SqlServer
 
         private static void AssignReferences(TableDefinition tableDefn, IEnumerable<dynamic> references)
         {
-            IEnumerable<ForeignKeyDefinition> fkDefns = references
-                .Where(r => tableDefn.Name.Equals((string)r.ReferencingTable) && tableDefn.Schema.Equals((string)r.ReferencingSchema))
-                .Select(r => new ForeignKeyDefinition(
-                    (string)r.ReferencingColumn,
-                    (string)r.ReferencedSchema,
-                    (string)r.ReferencedTable,
-                    (string)r.ReferencedColumn));
+            IEnumerable<dynamic> tableReferences = references
+                .Where(r => tableDefn.Name.Equals((string)r.ReferencingTable)
+                            && tableDefn.Schema.Equals((string)r.ReferencingSchema));
 
-            foreach (ForeignKeyDefinition fkDefn in fkDefns)
-                tableDefn.ForeignKeys.Add(fkDefn);
+            foreach (dynamic tableReference in tableReferences)
+            {
+                string columnName = (string)tableReference.ReferencingColumn;
+                ColumnDefinition columnDefn = tableDefn.Columns.Single(cd => cd.Name.Equals(columnName, StringComparison.Ordinal));
+                if (columnDefn.ForeignKey is not null)
+                    throw new InvalidOperationException();
+                columnDefn.ForeignKey = new ForeignKeyDefinition((string)tableReference.ReferencedSchema,
+                    (string)tableReference.ReferencedTable, (string)tableReference.ReferencedColumn);
+            }
         }
     }
 
