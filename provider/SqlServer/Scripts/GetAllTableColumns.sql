@@ -3,8 +3,9 @@
     c.TABLE_NAME AS [Table],
     c.COLUMN_NAME AS [Name],
     c.ORDINAL_POSITION AS [OrdinalPosition],
-    c.IS_NULLABLE AS [AllowNulls],
-    c.DATA_TYPE AS [DbDataType]
+    c.DATA_TYPE AS [DbDataType],
+    CONVERT(bit, CASE WHEN c.IS_NULLABLE = 'YES' THEN 1 ELSE 0 END) AS [IsNullable],
+    CONVERT(bit, COLUMNPROPERTY(object_id(c.TABLE_SCHEMA + '.' + c.TABLE_NAME), c.COLUMN_NAME, 'IsIdentity')) AS [IsIdentity]
 FROM INFORMATION_SCHEMA.COLUMNS c
 INNER JOIN INFORMATION_SCHEMA.TABLES t ON
     c.TABLE_SCHEMA = t.TABLE_SCHEMA AND

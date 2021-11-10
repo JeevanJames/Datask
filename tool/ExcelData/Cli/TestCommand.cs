@@ -33,7 +33,12 @@ namespace Datask.Tool.ExcelData
                 {
                     AnsiConsole.MarkupLine("  [grey]Columns:[/]");
                     foreach (ColumnDefinition column in table.Columns)
-                        AnsiConsole.MarkupLine($"    [green]{column.Name.EscapeMarkup()}[/]{(column.AllowNulls ? "*" : string.Empty)}: [white]{column.DatabaseType.EscapeMarkup()}, {column.Type.Name.EscapeMarkup()}, {column.DbType}[/]");
+                    {
+                        string format = $"    {(column.IsIdentity ? "[CadetBlue][[PK]][/]" : string.Empty)}" +
+                                        $"[green]{column.Name.EscapeMarkup()}[/]{(column.IsNullable ? "*" : string.Empty)}: " +
+                                        $"[white]{column.DatabaseType.EscapeMarkup()}, {column.Type.Name.EscapeMarkup()}, {column.DbType}[/]";
+                        AnsiConsole.MarkupLine(format);
+                    }
                 }
 
                 if (table.ForeignKeys.Count > 0)

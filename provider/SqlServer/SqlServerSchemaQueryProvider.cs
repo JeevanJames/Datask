@@ -69,7 +69,8 @@ namespace Datask.Providers.SqlServer
                         DatabaseType = c.DbDataType,
                         Type = mappings.Type,
                         DbType = mappings.DbType,
-                        AllowNulls = c.AllowNulls == "YES",
+                        IsNullable = c.IsNullable,
+                        IsIdentity = c.IsIdentity,
                     };
                 });
 

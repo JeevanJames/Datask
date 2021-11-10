@@ -84,7 +84,9 @@ namespace Datask.Providers
 
         public DbType DbType { get; init; }
 
-        public bool AllowNulls { get; init; }
+        public bool IsNullable { get; init; }
+
+        public bool IsIdentity { get; init; }
     }
 
     [DebuggerDisplay("{ColumnName,nq} ==> {ReferenceSchema,nq}.{ReferenceTable,nq}.{ReferenceColumn,nq}")]
