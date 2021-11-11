@@ -1,5 +1,6 @@
 //TODO: Correct namespace
-namespace Tools.DeployDacpac
+
+namespace Datask.Tools.DeployDacpac
 {
     internal static class Program
     {
