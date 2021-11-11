@@ -11,8 +11,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-using CodeBits;
-
 using Datask.Tool.ExcelData.Generator.Extensions;
 
 using DotLiquid;
@@ -246,9 +244,10 @@ namespace Datask.Tool.ExcelData.Generator
         /// <returns>Template.</returns>
         private static async Task<Template> ParseTemplate(string templateName, Assembly assembly, Type type)
         {
-            string modelTemplate = await assembly.LoadResourceAsString(type, $"Templates.{templateName}.liquid").ConfigureAwait(false);
-            var template = Template.Parse(modelTemplate);
-            return template;
+            Stream resourceStream = assembly.GetManifestResourceStream(type, $"Templates.{templateName}.liquid");
+            using StreamReader reader = new(resourceStream);
+            string modelTemplate = await reader.ReadToEndAsync();
+            return Template.Parse(modelTemplate);
         }
     }
 }

@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 
 using ConsoleFx.CmdLine;
-using ConsoleFx.CmdLine.ErrorHandling;
 using ConsoleFx.CmdLine.Help;
 
 using Spectre.Console;

@@ -19,12 +19,12 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="CodeBits.ResourceExtensions" Version="0.4.1" />
         <PackageReference Include="Dapper" Version="2.0.123" />
         <PackageReference Include="Microsoft.Data.SqlClient" Version="3.0.1" />
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\common\Utilities\Utilities.csproj" />
         <ProjectReference Include="..\Providers\Providers.csproj" />
     </ItemGroup>
 

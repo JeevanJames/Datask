@@ -6,13 +6,14 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Datask.Providers
 {
     public interface ISchemaQueryProvider
     {
-        public IAsyncEnumerable<TableDefinition> EnumerateTables(EnumerateTableOptions? options = null);
+        IAsyncEnumerable<TableDefinition> EnumerateTables(EnumerateTableOptions? options = null);
     }
 
     public abstract class SchemaQueryProvider<TConnection> : ISchemaQueryProvider
@@ -63,6 +64,8 @@ namespace Datask.Providers
 
         public string Schema { get; }
 
+        public string FullName => $"{Schema}.{Name}";
+
         [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
         public IList<ColumnDefinition> Columns => _columns.Value;
 
@@ -104,11 +107,18 @@ namespace Datask.Providers
 
         public Type Type { get; init; } = null!;
 
+        public int MaxLength { get; init; }
+
         public DbType DbType { get; init; }
 
         public bool IsNullable { get; init; }
 
         public bool IsIdentity { get; init; }
+
+        public bool IsPrimaryKey { get; init; }
+
+        [MemberNotNullWhen(true, nameof(ForeignKey))]
+        public bool IsForeignKey => ForeignKey is not null;
 
         public ForeignKeyDefinition? ForeignKey { get; set; }
     }

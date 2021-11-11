@@ -9,22 +9,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <None Remove="Scripts\BaseTables.sql" />
-      <None Remove="Scripts\TableColumnSchema.sql" />
-      <None Remove="Scripts\TableReferenceSchema.sql" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <EmbeddedResource Include="Scripts\BaseTables.sql" />
-      <EmbeddedResource Include="Scripts\TableColumnSchema.sql" />
-      <EmbeddedResource Include="Scripts\TableReferenceSchema.sql" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="CodeBits.LibraryEvents" Version="0.1.0" />
-        <PackageReference Include="CodeBits.ResourceExtensions" Version="0.4.1" />
         <PackageReference Include="EPPlus" Version="4.5.3.3" />
-        <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
+        <PackageReference Include="System.Linq.Async" Version="5.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\common\Utilities\Utilities.csproj" />
+        <ProjectReference Include="..\..\..\provider\Providers\Providers.csproj" />
+        <ProjectReference Include="..\..\..\provider\SqlServer\SqlServer.csproj" />
     </ItemGroup>
 
 </Project>

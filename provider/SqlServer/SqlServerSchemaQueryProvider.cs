@@ -65,6 +65,7 @@ namespace Datask.Providers.SqlServer
                     {
                         DatabaseType = c.DbDataType,
                         Type = mappings.Type,
+                        MaxLength = c.MaxLength is null ? 0 : (int)c.MaxLength,
                         DbType = mappings.DbType,
                         IsNullable = c.IsNullable,
                         IsIdentity = c.IsIdentity,

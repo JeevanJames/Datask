@@ -1,11 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>netstandard2.0</TargetFramework>
         <RootNamespace>$(BaseNamespace).Common.Utilities</RootNamespace>
         <AssemblyName>$(RootNamespace)</AssemblyName>
         <DocumentationFile>Properties\$(AssemblyName).xml</DocumentationFile>
         <Description>Common utilities</Description>
     </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CodeBits.LibraryEvents" Version="0.1.0" />
+        <PackageReference Include="CodeBits.ResourceExtensions" Version="0.4.5" />
+    </ItemGroup>
 
 </Project>

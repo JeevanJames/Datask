@@ -57,10 +57,8 @@ namespace Datask.Tool.ExcelData
                 ctx.Refresh();
             };
 
-            if (await builder.ExportExcel().ConfigureAwait(false))
-                AnsiConsole.MarkupLine($"The file {ExcelFile.FullName} generated successfully.");
-            else
-                AnsiConsole.MarkupLine("No table data to export.");
+            await builder.ExportExcel().ConfigureAwait(false);
+            AnsiConsole.MarkupLine($"The file {ExcelFile.FullName} generated successfully.");
 
             return 0;
         }

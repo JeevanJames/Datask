@@ -4,6 +4,7 @@
     c.COLUMN_NAME AS [Name],
     c.ORDINAL_POSITION AS [OrdinalPosition],
     c.DATA_TYPE AS [DbDataType],
+    c.CHARACTER_MAXIMUM_LENGTH AS [MaxLength],
     CONVERT(bit, CASE WHEN c.IS_NULLABLE = 'YES' THEN 1 ELSE 0 END) AS [IsNullable],
     CONVERT(bit, COLUMNPROPERTY(object_id(c.TABLE_SCHEMA + '.' + c.TABLE_NAME), c.COLUMN_NAME, 'IsIdentity')) AS [IsIdentity]
 FROM INFORMATION_SCHEMA.COLUMNS c

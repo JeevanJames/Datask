@@ -12,7 +12,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="CodeBits.ResourceExtensions" Version="0.1.0" />
         <PackageReference Include="DotLiquid" Version="2.2.548" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="ExcelDataReader" Version="3.6.0" GeneratePathProperty="true">
             <PrivateAssets>all</PrivateAssets>
@@ -26,7 +25,7 @@
         <PackageReference Include="System.Text.Encodings.Web" Version="5.0.0" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="System.Text.Json" Version="5.0.0" GeneratePathProperty="true" PrivateAssets="all" />
 
-        <PackageReference Include="NPOI" Version="2.5.5" GeneratePathProperty="true" PrivateAssets="all"/>
+        <PackageReference Include="NPOI" Version="2.5.5" GeneratePathProperty="true" PrivateAssets="all" />
         <!--<PackageReference Include="NPOI.OOXML" Version="2.5.5" GeneratePathProperty="true" PrivateAssets="all"/>-->
 
         <!--<PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0" GeneratePathProperty="true" PrivateAssets="all" />

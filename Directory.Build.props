@@ -10,6 +10,7 @@
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <WarningsAsErrors />
         <NoWarn>1701;1702;1591;NU5104;NU5105</NoWarn>
+        <EnablePreviewFeatures>True</EnablePreviewFeatures>
 
         <!-- Package properties -->
         <Version>0.1.0</Version>
@@ -51,7 +52,7 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.30.0.37606">
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.31.0.39249">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
