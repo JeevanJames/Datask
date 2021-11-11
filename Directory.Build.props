@@ -5,12 +5,13 @@
         <BaseNamespace>Datask</BaseNamespace>
 
         <!-- Build properties -->
-        <LangVersion>latest</LangVersion>
+        <LangVersion>10.0</LangVersion>
 		<Nullable>enable</Nullable>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <WarningsAsErrors />
         <NoWarn>1701;1702;1591;NU5104;NU5105</NoWarn>
         <EnablePreviewFeatures>True</EnablePreviewFeatures>
+        <ImplicitUsings>enable</ImplicitUsings>
 
         <!-- Package properties -->
         <Version>0.1.0</Version>
@@ -37,6 +38,7 @@
 
     <ItemGroup>
         <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="Properties/stylecop.json" />
+        <Compile Include="$(MSBuildThisFileDirectory)shared/GlobalSuppressions.cs" Link="Properties/GlobalSuppressions.cs" />
     </ItemGroup>
 
     <ItemGroup>

@@ -2,12 +2,9 @@
 // This file is licensed to you under the MIT License.
 // See the LICENSE file in the project root for more information.
 
-using System;
+namespace Datask.Providers;
 
-namespace Datask.Providers
+public interface IProvider : IAsyncDisposable
 {
-    public interface IProvider : IAsyncDisposable
-    {
-        ISchemaQueryProvider SchemaQuery { get; }
-    }
+    ISchemaQueryProvider SchemaQuery { get; }
 }
