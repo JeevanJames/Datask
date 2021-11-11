@@ -26,6 +26,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Datask.ruleset = Datask.ruleset
 		Datask.sln.licenseheader = Datask.sln.licenseheader
 		Directory.Build.props = Directory.Build.props
+		global.json = global.json
 		NuGet.config = NuGet.config
 		README.md = README.md
 		stylecop.json = stylecop.json
