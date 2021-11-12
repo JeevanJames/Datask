@@ -17,9 +17,9 @@ public sealed class PostgreSqlProvider : IProvider
         _schemaProvider = new(InitializeSchemaQuery);
     }
 
-    public ValueTask DisposeAsync()
+    public void Dispose()
     {
-        return _connection.DisposeAsync();
+        _connection.Dispose();
     }
 
     public ISchemaQueryProvider SchemaQuery => _schemaProvider.Value;

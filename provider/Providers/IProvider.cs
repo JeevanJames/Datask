@@ -4,7 +4,7 @@
 
 namespace Datask.Providers;
 
-public interface IProvider : IAsyncDisposable
+public interface IProvider : IDisposable
 {
     ISchemaQueryProvider SchemaQuery { get; }
 }

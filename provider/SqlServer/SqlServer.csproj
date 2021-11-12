@@ -1,16 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>netstandard2.0</TargetFramework>
         <RootNamespace>$(BaseNamespace).Providers.SqlServer</RootNamespace>
         <AssemblyName>$(RootNamespace)</AssemblyName>
         <DocumentationFile>Properties\$(AssemblyName).xml</DocumentationFile>
         <Description>SQL Server providers</Description>
     </PropertyGroup>
-
-    <ItemGroup>
-      <None Remove="Scripts\GetAllTableReferences.sql" />
-    </ItemGroup>
 
     <ItemGroup>
         <EmbeddedResource Include="Scripts\GetAllTableColumns.sql" />

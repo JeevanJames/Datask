@@ -4,13 +4,12 @@
 
 using System.Data;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Datask.Providers;
 
 public interface ISchemaQueryProvider
 {
-    IAsyncEnumerable<TableDefinition> EnumerateTables(EnumerateTableOptions? options = null);
+    Task<IList<TableDefinition>> EnumerateTables(EnumerateTableOptions? options = null);
 }
 
 public abstract class SchemaQueryProvider<TConnection> : ISchemaQueryProvider
@@ -21,25 +20,25 @@ public abstract class SchemaQueryProvider<TConnection> : ISchemaQueryProvider
         Connection = connection ?? throw new ArgumentNullException(nameof(connection));
     }
 
-    public IAsyncEnumerable<TableDefinition> EnumerateTables(EnumerateTableOptions? options = null)
+    public Task<IList<TableDefinition>> EnumerateTables(EnumerateTableOptions? options = null)
     {
         options ??= new EnumerateTableOptions();
-        if (options.IncludeForeignKeys && !options.IncludeColumns)
-            options = options with { IncludeColumns = true };
+        if (options.IncludeForeignKeys)
+            options.IncludeColumns = true;
 
         return GetTables(options);
     }
 
-    protected abstract IAsyncEnumerable<TableDefinition> GetTables(EnumerateTableOptions options);
+    protected abstract Task<IList<TableDefinition>> GetTables(EnumerateTableOptions options);
 
     protected TConnection Connection { get; }
 }
 
-public sealed record EnumerateTableOptions
+public sealed class EnumerateTableOptions
 {
-    public bool IncludeColumns { get; init; }
+    public bool IncludeColumns { get; set; }
 
-    public bool IncludeForeignKeys { get; init; }
+    public bool IncludeForeignKeys { get; set; }
 }
 
 [DebuggerDisplay("{Schema,nq}.{Name,nq}")]
@@ -86,12 +85,12 @@ public sealed record TableDefinition : IEquatable<TableDefinition?>, IEquatable<
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(Name, Schema);
+        return $"{Schema}.{Name}".GetHashCode();
     }
 }
 
 [DebuggerDisplay("{Name,nq} : {DatabaseType,nq}")]
-public sealed record ColumnDefinition
+public sealed class ColumnDefinition
 {
     public ColumnDefinition(string name)
     {
@@ -100,28 +99,43 @@ public sealed record ColumnDefinition
 
     public string Name { get; }
 
-    public string DatabaseType { get; init; } = null!;
+    public string DatabaseType { get; set; } = null!;
 
-    public Type Type { get; init; } = null!;
+    public Type Type { get; set; } = null!;
 
-    public int MaxLength { get; init; }
+    public int MaxLength { get; set; }
 
-    public DbType DbType { get; init; }
+    public DbType DbType { get; set; }
 
-    public bool IsNullable { get; init; }
+    public bool IsNullable { get; set; }
 
-    public bool IsIdentity { get; init; }
+    public bool IsIdentity { get; set; }
 
-    public bool IsPrimaryKey { get; init; }
+    public bool IsPrimaryKey { get; set; }
 
-    [MemberNotNullWhen(true, nameof(ForeignKey))]
+    //[MemberNotNullWhen(true, nameof(ForeignKey))]
     public bool IsForeignKey => ForeignKey is not null;
 
     public ForeignKeyDefinition? ForeignKey { get; set; }
 }
 
 [DebuggerDisplay("{Schema,nq}.{Table,nq}.{Column,nq}")]
-public sealed record ForeignKeyDefinition(string Schema, string Table, string Column);
+public sealed class ForeignKeyDefinition
+{
+    public ForeignKeyDefinition(string schema, string table, string column)
+    {
+        Schema = schema;
+        Table = table;
+        Column = column;
+    }
+
+    public string Schema { get; }
+
+    public string Table { get; }
+
+    public string Column { get; }
+}
+
 
 public sealed class TableForeignKeyComparer : Comparer<TableDefinition>
 {

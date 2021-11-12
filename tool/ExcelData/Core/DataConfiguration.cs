@@ -2,9 +2,9 @@
 
 public class DataConfiguration
 {
-    public string ConnectionString { get; init; } = null!;
+    public string ConnectionString { get; set; } = null!;
 
-    public FileInfo FilePath { get; init; } = null!;
+    public FileInfo FilePath { get; set; } = null!;
 
     public IList<string> IncludeTables { get; } = new List<string>();
 

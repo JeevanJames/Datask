@@ -38,11 +38,11 @@ public sealed class DataBuilder
     private async Task FillExcelData(ExcelWorkbook workbook)
     {
         IProvider provider = new SqlServerProvider(_configuration.ConnectionString);
-        List<TableDefinition> tables = await provider.SchemaQuery.EnumerateTables(new EnumerateTableOptions
+        IList<TableDefinition> tables = await provider.SchemaQuery.EnumerateTables(new EnumerateTableOptions
         {
             IncludeColumns = true,
             IncludeForeignKeys = true,
-        }).ToListAsync();
+        });
         Sort(tables);
 
         foreach (TableDefinition table in tables)
@@ -85,17 +85,17 @@ public sealed class DataBuilder
     }
 
     private static bool TryCreateWorksheet(ExcelWorkbook workbook, TableDefinition table,
-        [NotNullWhen(true)] out ExcelWorksheet? worksheet)
+        out ExcelWorksheet worksheet)
     {
         if (workbook.Worksheets.Any(ws => ws.Tables.Any(tbl => tbl.Name == table.FullName)))
         {
-            worksheet = null;
+            worksheet = null!;
             return false;
         }
 
         Random random = new((int)DateTime.Now.Ticks);
         string worksheetName = table.FullName.Length > 31
-            ? $"{table.FullName[..24]}...{random.Next(1, 99)}"
+            ? $"{table.FullName.Substring(0, 24)}...{random.Next(1, 99)}"
             : table.FullName;
 
         worksheet = workbook.Worksheets.Add(worksheetName);
@@ -132,7 +132,7 @@ public sealed class DataBuilder
             {
                 foreach (ExcelTable table in sheet.Tables)
                 {
-                    if (table.Name != columnDefn.ForeignKey.Table)
+                    if (table.Name != columnDefn.ForeignKey!.Table)
                         continue;
 
                     int? fkColumnPosition = table.Columns[columnDefn.ForeignKey.Column]?.Id;

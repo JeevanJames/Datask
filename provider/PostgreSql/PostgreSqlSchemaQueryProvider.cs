@@ -13,7 +13,7 @@ public sealed class PostgreSqlSchemaQueryProvider : SchemaQueryProvider<NpgsqlCo
     {
     }
 
-    protected override IAsyncEnumerable<TableDefinition> GetTables(EnumerateTableOptions options)
+    protected override Task<IList<TableDefinition>> GetTables(EnumerateTableOptions options)
     {
         throw new NotImplementedException();
     }

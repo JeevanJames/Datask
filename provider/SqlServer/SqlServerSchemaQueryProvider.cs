@@ -19,7 +19,7 @@ public sealed class SqlServerSchemaQueryProvider : SchemaQueryProvider<SqlConnec
     {
     }
 
-    protected override async IAsyncEnumerable<TableDefinition> GetTables(EnumerateTableOptions options)
+    protected override async Task<IList<TableDefinition>> GetTables(EnumerateTableOptions options)
     {
         // Get all table columns and foreign keys, if required.
         IEnumerable<dynamic>? allTableColumns = null;
@@ -40,6 +40,7 @@ public sealed class SqlServerSchemaQueryProvider : SchemaQueryProvider<SqlConnec
         string getTablesScript = await Script.GetTables().ConfigureAwait(false);
         IEnumerable<dynamic> tables = await Connection.QueryAsync(getTablesScript).ConfigureAwait(false);
 
+        List<TableDefinition> allTables = new();
         foreach (dynamic table in tables)
         {
             TableDefinition tableDefn = new(table.Name, table.Schema);
@@ -47,8 +48,10 @@ public sealed class SqlServerSchemaQueryProvider : SchemaQueryProvider<SqlConnec
                 AssignColumns(tableDefn, allTableColumns);
             if (allTableReferences is not null)
                 AssignReferences(tableDefn, allTableReferences);
-            yield return tableDefn;
+            allTables.Add(tableDefn);
         }
+
+        return allTables;
     }
 
     private static void AssignColumns(TableDefinition tableDefn, IEnumerable<dynamic> columns)

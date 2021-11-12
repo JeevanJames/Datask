@@ -17,9 +17,9 @@ public sealed class SqlServerProvider : IProvider
         _schemaQueryProvider = new Lazy<ISchemaQueryProvider>(InitializeSchemaQuery);
     }
 
-    public ValueTask DisposeAsync()
+    public void Dispose()
     {
-        return _connection.DisposeAsync();
+        _connection.Dispose();
     }
 
     public ISchemaQueryProvider SchemaQuery => _schemaQueryProvider.Value;

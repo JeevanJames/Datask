@@ -7,11 +7,10 @@ public sealed class TestCommand : Command
 {
     public override async Task<int> HandleCommandAsync(IParseResult parseResult)
     {
-        await using IProvider provider = new SqlServerProvider(
+        using IProvider provider = new SqlServerProvider(
             @"Server=(localdb)\MSSQLLocalDB;AttachDbFilename=D:\Temp\Northwnd.mdf;Trusted_Connection=Yes;");
-        List<TableDefinition> tables = await provider.SchemaQuery
-            .EnumerateTables(new EnumerateTableOptions { IncludeColumns = true, IncludeForeignKeys = true, })
-            .ToListAsync();
+        IList<TableDefinition> tables = await provider.SchemaQuery
+            .EnumerateTables(new EnumerateTableOptions { IncludeColumns = true, IncludeForeignKeys = true, });
 
         Sort(tables);
 
