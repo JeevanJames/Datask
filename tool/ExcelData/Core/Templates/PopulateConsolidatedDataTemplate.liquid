@@ -1,0 +1,20 @@
+﻿        internal static async Task Populate(SqlConnection connection)
+        {
+{% for table in model -%}
+            await Populate{{table}}Data(connection).ConfigureAwait(false);
+{% endfor -%}
+        }
+
+        private static async Task SetIdentityOn(SqlConnection connection, string tableName)
+        {
+            await using SqlCommand command = new("SET IDENTITY_INSERT " + tableName + " ON", connection);
+            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+        }
+
+        private static async Task SetIdentityOff(SqlConnection connection, string tableName)
+        {
+            await using SqlCommand command = new("SET IDENTITY_INSERT " + tableName + " OFF", connection);
+            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+        }
+    }
+

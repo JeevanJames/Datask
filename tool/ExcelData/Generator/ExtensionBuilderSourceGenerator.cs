@@ -1,27 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
+using Datask.Tool.ExcelData.Core;
 using Datask.Tool.ExcelData.Generator.Extensions;
 
-using DotLiquid;
-
-using ExcelDataReader;
-
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
-
-using NPOI.SS.UserModel;
-using NPOI.XSSF.UserModel;
 
 namespace Datask.Tool.ExcelData.Generator
 {
@@ -44,21 +27,22 @@ namespace Datask.Tool.ExcelData.Generator
 
         public void Execute(GeneratorExecutionContext context)
         {
-//#if DEBUG
-//            if (!System.Diagnostics.Debugger.IsAttached)
-//            {
-//                System.Diagnostics.Debugger.Launch();
-//            }
-//#endif
+#if DEBUG
+            if (!System.Diagnostics.Debugger.IsAttached)
+            {
+                System.Diagnostics.Debugger.Launch();
+            }
+#endif
             try
             {
                 ReadExcelData(context);
+                //context.AddSource("TestDataHelper.cs", SourceText.From(response, Encoding.UTF8));
             }
 #pragma warning disable RCS1075 // Avoid empty catch clause that catches System.Exception.
-            catch (Exception)
+            catch (Exception exception)
 #pragma warning restore RCS1075 // Avoid empty catch clause that catches System.Exception.
             {
-                //context.ReportDiagnostic(Diagnostic.Create(_dataBuilderExtensionErrorDescriptor, Location.None, $"{exception.Message} {exception.InnerException}"));
+                context.ReportDiagnostic(Diagnostic.Create(_dataBuilderExtensionErrorDescriptor, Location.None, $"{exception.Message} {exception.InnerException}"));
             }
         }
 
@@ -72,7 +56,7 @@ namespace Datask.Tool.ExcelData.Generator
 
                 //Parse config file and fill the data model
                 string configurationJson = File.ReadAllText(file.Path);
-                DataModel? dataSetup = JsonSerializer.Deserialize<DataModel>(configurationJson, new JsonSerializerOptions
+                DataHelperConfiguration? dataSetupConfiguration = JsonSerializer.Deserialize<DataHelperConfiguration>(configurationJson, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true,
                     AllowTrailingCommas = true,
@@ -83,171 +67,174 @@ namespace Datask.Tool.ExcelData.Generator
                     },
                 });
 
-                if (dataSetup?.Flavours is null)
-                    return;
+                if (dataSetupConfiguration?.Flavors is null)
+                    continue;
 
-                foreach (Flavours? flavour in dataSetup.Flavours)
-                {
-                    using FileStream fs = new(flavour.ExcelPath, FileMode.Open, FileAccess.Read);
-                    IWorkbook xssWorkbook = new XSSFWorkbook(fs);
+                DataExtensionBuilder builder = new(dataSetupConfiguration);
+                builder.BuildDataExtensionAsync().GetAwaiter().GetResult();
 
-                    int noOfWorkSheets = xssWorkbook.NumberOfSheets;
+                //foreach (Flavours? flavour in dataSetup.Flavours)
+                //{
+                //    using FileStream fs = new(flavour.ExcelPath, FileMode.Open, FileAccess.Read);
+                //    IWorkbook xssWorkbook = new XSSFWorkbook(fs);
 
-                    for (int index = 0; index < noOfWorkSheets; index++)
-                    {
-                        TableData td = new();
+                //    int noOfWorkSheets = xssWorkbook.NumberOfSheets;
 
-                        var sheet = (XSSFSheet)xssWorkbook.GetSheetAt(index);
+                //    for (int index = 0; index < noOfWorkSheets; index++)
+                //    {
+                //        TableData td = new();
 
-                        List<XSSFTable> xssfTables = sheet.GetTables();
-                        if (xssfTables.Any())
-                        {
-                            string[] tableName = xssfTables.First().DisplayName.Split('.');
-                            td.Name = tableName.Skip(1).First();
-                            td.Schema = tableName.Take(1).First();
-                        }
+                //        var sheet = (XSSFSheet)xssWorkbook.GetSheetAt(index);
 
-                        IRow headerRow = sheet.GetRow(0);
-                        List<int> timestampCols = new();
-                        int cellCount = headerRow.LastCellNum;
-                        for (int j = 0; j < cellCount; j++)
-                        {
-                            ICell cell = headerRow.GetCell(j);
-                            if (cell == null || string.IsNullOrWhiteSpace(cell.ToString()))
-                                continue;
+                //        List<XSSFTable> xssfTables = sheet.GetTables();
+                //        if (xssfTables.Any())
+                //        {
+                //            string[] tableName = xssfTables.First().DisplayName.Split('.');
+                //            td.Name = tableName.Skip(1).First();
+                //            td.Schema = tableName.Take(1).First();
+                //        }
 
-                            string cellComment = sheet.GetCellComment(cell.Address).String.ToString();
-                            TableColumns? columnMetaData = JsonSerializer.Deserialize<TableColumns>(cellComment, new JsonSerializerOptions()
-                            {
-                                AllowTrailingCommas = true,
-                                PropertyNameCaseInsensitive = true,
-                            });
+                //        IRow headerRow = sheet.GetRow(0);
+                //        List<int> timestampCols = new();
+                //        int cellCount = headerRow.LastCellNum;
+                //        for (int j = 0; j < cellCount; j++)
+                //        {
+                //            ICell cell = headerRow.GetCell(j);
+                //            if (cell == null || string.IsNullOrWhiteSpace(cell.ToString()))
+                //                continue;
 
-                            (string CSharpAliasType, string DbType) valueTuple = TypeMappings.GetMappings(columnMetaData!.Type);
+                //            string cellComment = sheet.GetCellComment(cell.Address).String.ToString();
+                //            TableColumns? columnMetaData = JsonSerializer.Deserialize<TableColumns>(cellComment, new JsonSerializerOptions()
+                //            {
+                //                AllowTrailingCommas = true,
+                //                PropertyNameCaseInsensitive = true,
+                //            });
 
-                            //Store Timestamp columns and remove at last
-                            if (valueTuple.DbType == "SqlDbType.Timestamp")
-                                timestampCols.Add(j);
+                //            (string CSharpAliasType, string DbType) valueTuple = TypeMappings.GetMappings(columnMetaData!.Type);
 
-                            td.TableColumns.Add(new TableColumns()
-                            {
-                                Name = cell.ToString(),
-                                DbType = valueTuple.DbType,
-                                CSharpType = valueTuple.CSharpAliasType,
-                                Type = columnMetaData.Type,
-                                IsIdentity = columnMetaData.IsIdentity,
-                            });
+                //            //Store Timestamp columns and remove at last
+                //            if (valueTuple.DbType == "SqlDbType.Timestamp")
+                //                timestampCols.Add(j);
 
-                            if (columnMetaData.IsIdentity)
-                                td.ContainsIdentityColumn = true;
-                        }
+                //            td.TableColumns.Add(new TableColumns()
+                //            {
+                //                Name = cell.ToString(),
+                //                DbType = valueTuple.DbType,
+                //                CSharpType = valueTuple.CSharpAliasType,
+                //                Type = columnMetaData.Type,
+                //                IsIdentity = columnMetaData.IsIdentity,
+                //            });
 
-                        for (int i = sheet.FirstRowNum + 1; i <= sheet.LastRowNum; i++)
-                        {
-                            List<string?> rowList = new();
-                            IRow row = sheet.GetRow(i);
-                            if (row == null)
-                                continue;
-                            if (row.Cells.All(d => d.CellType == CellType.Blank))
-                                continue;
+                //            if (columnMetaData.IsIdentity)
+                //                td.ContainsIdentityColumn = true;
+                //        }
 
-                            for (int j = row.FirstCellNum; j < cellCount; j++)
-                            {
-                                //Skip timestamp column data
-                                if (timestampCols.Contains(j))
-                                    continue;
+                //        for (int i = sheet.FirstRowNum + 1; i <= sheet.LastRowNum; i++)
+                //        {
+                //            List<string?> rowList = new();
+                //            IRow row = sheet.GetRow(i);
+                //            if (row == null)
+                //                continue;
+                //            if (row.Cells.All(d => d.CellType == CellType.Blank))
+                //                continue;
 
-                                rowList.Add(row.GetCell(j) == null ? "string.Empty" : ConvertObjectValToCSharpType(row.GetCell(j), td.TableColumns[j].Type));
-                            }
+                //            for (int j = row.FirstCellNum; j < cellCount; j++)
+                //            {
+                //                //Skip timestamp column data
+                //                if (timestampCols.Contains(j))
+                //                    continue;
 
-                            if (rowList.Count > 0)
-                                td.DataRows.Add(rowList);
-                        }
+                //                rowList.Add(row.GetCell(j) == null ? "string.Empty" : ConvertObjectValToCSharpType(row.GetCell(j), td.TableColumns[j].Type));
+                //            }
 
-                        //Remove timestamp columns
-                        foreach (int cols in timestampCols)
-                        {
-                            td.TableColumns.RemoveAt(cols);
-                        }
+                //            if (rowList.Count > 0)
+                //                td.DataRows.Add(rowList);
+                //        }
 
-                        flavour.TableData.Add(td);
-                    }
-                }
+                //        //Remove timestamp columns
+                //        foreach (int cols in timestampCols)
+                //        {
+                //            td.TableColumns.RemoveAt(cols);
+                //        }
 
-                RenderTemplate(context, dataSetup);
+                //        flavour.TableData.Add(td);
+                //    }
+                //}
+
+                //RenderTemplate(context, dataSetup);
             }
         }
 
-        private static string ConvertObjectValToCSharpType(object rowValue, string colType)
-        {
-            return colType switch
-            {
-                "binary" => $"BitConverter.GetBytes(Convert.ToUInt64({rowValue}))",
-                "image" => $"BitConverter.GetBytes(Convert.ToUInt64({rowValue}))",
-                "timestamp" => $"BitConverter.GetBytes(Convert.ToUInt64({rowValue}))",
-                "varBinary" => $"BitConverter.GetBytes(Convert.ToUInt64({rowValue}))",
-                "bit" => rowValue.ToString() == "0" ? "false" : "true",
-                "char" => rowValue.ToString(),
-                "nchar" => rowValue.ToString(),
-                "ntext" => rowValue.ToString(),
-                "nvarchar" => rowValue.ToString(),
-                "text" => rowValue.ToString(),
-                "varchar" => rowValue.ToString(),
-                "xml" => rowValue.ToString(),
-                "datetime" => $"DateTime.Parse(\"{rowValue}\")",
-                "smalldatetime" => $"DateTime.Parse(\"{rowValue}\")",
-                "date" => $"DateTime.Parse(\"{rowValue}\")",
-                "time" => $"DateTime.Parse(\"{rowValue}\")",
-                "datetime2" => $"DateTime.Parse(\"{rowValue}\")",
-                "decimal" => $"{rowValue}",
-                "bigint" => $"{rowValue}",
-                "money" => $"{rowValue}",
-                "smallmoney" => $"{rowValue}",
-                "float" => $"{rowValue}",
-                "int" => $"{rowValue}",
-                "real" => $"{rowValue}",
-                "smallint" => $"{rowValue}",
-                "tinyint" => $"{rowValue}",
-                "uniqueidentifier" => $"new Guid((string){rowValue})",
-                "datetimeoffset" => $"DateTimeOffset.Parse((string){rowValue})",
-                _ => $"\"{rowValue}\"",
-            };
-        }
+        //private static string ConvertObjectValToCSharpType(object rowValue, string colType)
+        //{
+        //    return colType switch
+        //    {
+        //        "binary" => $"BitConverter.GetBytes(Convert.ToUInt64({rowValue}))",
+        //        "image" => $"BitConverter.GetBytes(Convert.ToUInt64({rowValue}))",
+        //        "timestamp" => $"BitConverter.GetBytes(Convert.ToUInt64({rowValue}))",
+        //        "varBinary" => $"BitConverter.GetBytes(Convert.ToUInt64({rowValue}))",
+        //        "bit" => rowValue.ToString() == "0" ? "false" : "true",
+        //        "char" => rowValue.ToString(),
+        //        "nchar" => rowValue.ToString(),
+        //        "ntext" => rowValue.ToString(),
+        //        "nvarchar" => rowValue.ToString(),
+        //        "text" => rowValue.ToString(),
+        //        "varchar" => rowValue.ToString(),
+        //        "xml" => rowValue.ToString(),
+        //        "datetime" => $"DateTime.Parse(\"{rowValue}\")",
+        //        "smalldatetime" => $"DateTime.Parse(\"{rowValue}\")",
+        //        "date" => $"DateTime.Parse(\"{rowValue}\")",
+        //        "time" => $"DateTime.Parse(\"{rowValue}\")",
+        //        "datetime2" => $"DateTime.Parse(\"{rowValue}\")",
+        //        "decimal" => $"{rowValue}",
+        //        "bigint" => $"{rowValue}",
+        //        "money" => $"{rowValue}",
+        //        "smallmoney" => $"{rowValue}",
+        //        "float" => $"{rowValue}",
+        //        "int" => $"{rowValue}",
+        //        "real" => $"{rowValue}",
+        //        "smallint" => $"{rowValue}",
+        //        "tinyint" => $"{rowValue}",
+        //        "uniqueidentifier" => $"new Guid((string){rowValue})",
+        //        "datetimeoffset" => $"DateTimeOffset.Parse((string){rowValue})",
+        //        _ => $"\"{rowValue}\"",
+        //    };
+        //}
 
-        private void RenderTemplate(GeneratorExecutionContext context, DataModel dataModel)
-        {
-            Template.RegisterSafeType(typeof(DataModel),
-                typeof(DataModel).GetProperties().Select(p => p.Name).ToArray());
-            Template.RegisterSafeType(typeof(Flavours),
-                typeof(Flavours).GetProperties().Select(p => p.Name).ToArray());
-            Template.RegisterSafeType(typeof(TableData),
-                typeof(TableData).GetProperties().Select(p => p.Name).ToArray());
-            Template.RegisterSafeType(typeof(TableColumns),
-                typeof(TableColumns).GetProperties().Select(p => p.Name).ToArray());
+        //private void RenderTemplate(GeneratorExecutionContext context, DataModel dataModel)
+        //{
+        //    Template.RegisterSafeType(typeof(DataModel),
+        //        typeof(DataModel).GetProperties().Select(p => p.Name).ToArray());
+        //    Template.RegisterSafeType(typeof(Flavours),
+        //        typeof(Flavours).GetProperties().Select(p => p.Name).ToArray());
+        //    Template.RegisterSafeType(typeof(TableData),
+        //        typeof(TableData).GetProperties().Select(p => p.Name).ToArray());
+        //    Template.RegisterSafeType(typeof(TableColumns),
+        //        typeof(TableColumns).GetProperties().Select(p => p.Name).ToArray());
 
-            Template template = ParseTemplate("DataExtensionTemplate", Assembly.GetExecutingAssembly(), GetType())
-                .GetAwaiter().GetResult();
-            string response = template.Render(Hash.FromAnonymousObject(new
-            {
-                d = dataModel,
-            }));
+        //    Template template = ParseTemplate("DataExtensionTemplate", Assembly.GetExecutingAssembly(), GetType())
+        //        .GetAwaiter().GetResult();
+        //    string response = template.Render(Hash.FromAnonymousObject(new
+        //    {
+        //        d = dataModel,
+        //    }));
 
-            context.AddSource($"{dataModel.ClassName}.cs", SourceText.From(response, Encoding.UTF8));
-        }
+        //    context.AddSource($"{dataModel.ClassName}.cs", SourceText.From(response, Encoding.UTF8));
+        //}
 
-        /// <summary>
-        /// Parse Template.
-        /// </summary>
-        /// <param name="templateName">Template name.</param>
-        /// <param name="assembly">Executing assembly.</param>
-        /// <param name="type">object type.</param>
-        /// <returns>Template.</returns>
-        private static async Task<Template> ParseTemplate(string templateName, Assembly assembly, Type type)
-        {
-            Stream resourceStream = assembly.GetManifestResourceStream(type, $"Templates.{templateName}.liquid");
-            using StreamReader reader = new(resourceStream);
-            string modelTemplate = await reader.ReadToEndAsync();
-            return Template.Parse(modelTemplate);
-        }
+        ///// <summary>
+        ///// Parse Template.
+        ///// </summary>
+        ///// <param name="templateName">Template name.</param>
+        ///// <param name="assembly">Executing assembly.</param>
+        ///// <param name="type">object type.</param>
+        ///// <returns>Template.</returns>
+        //private static async Task<Template> ParseTemplate(string templateName, Assembly assembly, Type type)
+        //{
+        //    Stream resourceStream = assembly.GetManifestResourceStream(type, $"Templates.{templateName}.liquid");
+        //    using StreamReader reader = new(resourceStream);
+        //    string modelTemplate = await reader.ReadToEndAsync();
+        //    return Template.Parse(modelTemplate);
+        //}
     }
 }

@@ -56,6 +56,10 @@ public sealed class DataBuilder
 
             for (int i = 0; i < table.Columns.Count; i++)
             {
+                //Remove the timestamp column from excel.
+                if (table.Columns[i].DatabaseType == "timestamp")
+                    continue;
+
                 worksheet.Cells[1, i + 1].Value = table.Columns[i].Name;
                 worksheet.Cells[1, i + 1].Style.Font.Bold = true;
                 worksheet.Cells[1, i + 1].AutoFitColumns();
@@ -143,7 +147,7 @@ public sealed class DataBuilder
                     IExcelDataValidationList? fkDataValidation = worksheet.DataValidations.AddListValidation(columnDataRange);
                     string fkColumnLetter = ExcelCellAddress.GetColumnLetter((int)fkColumnPosition);
                     string validationFormula =
-                        $"='{columnDefn.ForeignKey.Table}'!${fkColumnLetter}$2:${fkColumnLetter}${ExcelPackage.MaxRows}";
+                        $"='{columnDefn.ForeignKey.Schema}.{columnDefn.ForeignKey.Table}'!${fkColumnLetter}$2:${fkColumnLetter}${ExcelPackage.MaxRows}";
 
                     fkDataValidation.ShowErrorMessage = true;
                     fkDataValidation.Error = "The value cannot be empty.";
@@ -243,7 +247,7 @@ public sealed class DataBuilder
         tableRange.Style.Border.Bottom.Style = ExcelBorderStyle.Medium;
 
         //Adding a table to a Range
-        ExcelTable excelTable = worksheet.Tables.Add(tableRange, table.Name);
+        ExcelTable excelTable = worksheet.Tables.Add(tableRange, table.FullName);
 
         //Formatting the table style
         excelTable.TableStyle = TableStyles.Dark10;

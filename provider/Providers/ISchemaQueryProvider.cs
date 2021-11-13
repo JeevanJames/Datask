@@ -101,6 +101,8 @@ public sealed class ColumnDefinition
 
     public string DatabaseType { get; set; } = null!;
 
+    public string CSharpType { get; set; } = null!;
+
     public Type Type { get; set; } = null!;
 
     public int MaxLength { get; set; }

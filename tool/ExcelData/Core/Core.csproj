@@ -9,8 +9,26 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <None Remove="Templates\PopulateConsolidatedDataTemplate.liquid" />
+      <None Remove="Templates\PopulateDataTemplate.liquid" />
+      <None Remove="Templates\PopulateFlavorDataTemplate.liquid" />
+      <None Remove="Templates\PopulateTableDataTemplate.liquid" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="Templates\PopulateDataTemplate.liquid" />
+      <EmbeddedResource Include="Templates\PopulateConsolidatedDataTemplate.liquid" />
+      <EmbeddedResource Include="Templates\PopulateFlavorDataTemplate.liquid" />
+      <EmbeddedResource Include="Templates\PopulateTableDataTemplate.liquid" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="DotLiquid" Version="2.2.548" />
         <PackageReference Include="EPPlus" Version="4.5.3.3" />
         <PackageReference Include="System.Linq.Async" Version="5.0.0" />
+        <PackageReference Include="System.Text.Encodings.Web" Version="5.0.0" />
+        <PackageReference Include="System.Text.Json" Version="5.0.0" />
+        <PackageReference Include="NPOI" Version="2.5.5" />
     </ItemGroup>
 
     <ItemGroup>

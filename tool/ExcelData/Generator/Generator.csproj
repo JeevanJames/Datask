@@ -24,9 +24,8 @@
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.8.0" />
         <PackageReference Include="System.Text.Encodings.Web" Version="5.0.0" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="System.Text.Json" Version="5.0.0" GeneratePathProperty="true" PrivateAssets="all" />
-
+        <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.7.0" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="NPOI" Version="2.5.5" GeneratePathProperty="true" PrivateAssets="all" />
-        <!--<PackageReference Include="NPOI.OOXML" Version="2.5.5" GeneratePathProperty="true" PrivateAssets="all"/>-->
 
         <!--<PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.0.0" GeneratePathProperty="true" PrivateAssets="all" />
@@ -34,6 +33,10 @@
         <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="3.1.0.0" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.0.0" GeneratePathProperty="true" PrivateAssets="all" />
         <PackageReference Include="EPPlus" Version="5.0.3" GeneratePathProperty="true" PrivateAssets="all" />-->
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Core\Core.csproj" GeneratePathProperty="true" PrivateAssets="all"/>
     </ItemGroup>
 
     <PropertyGroup>
@@ -55,7 +58,7 @@
             <TargetPathWithTargetPlatformMoniker Include="$(PkgSystem_Text_Encodings_Web)\lib\netstandard2.0\System.Text.Encodings.Web.dll" IncludeRuntimeDependency="false" />
 
             <TargetPathWithTargetPlatformMoniker Include="$(PkgNPOI)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
-            --><!--<TargetPathWithTargetPlatformMoniker Include="$(PkgNPOI)\lib\netstandard2.0\NPOI.OOXML.dll" IncludeRuntimeDependency="false" />--><!--
+            <TargetPathWithTargetPlatformMoniker Include="$(PkgNPOI)\lib\netstandard2.0\NPOI.OOXML.dll" IncludeRuntimeDependency="false" />
             --><!--<TargetPathWithTargetPlatformMoniker Include="$(PkgNPOI_OOXML)\lib\netstandard2.0\NPOI.OOXML.dll" IncludeRuntimeDependency="false" />--><!--
 
             --><!--<TargetPathWithTargetPlatformMoniker Include="$(PkgEPPlus)\lib\netstandard2.0\EPPlus.dll" IncludeRuntimeDependency="false" />
@@ -76,6 +79,8 @@
         <None Include="$(PkgSystem_Text_Encodings_Web)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
         <None Include="$(PkgNPOI)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <!--<None Include="$(PkgNPOI_OOXML)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />-->
+        <None Include="$(PkgSystem_Configuration_ConfigurationManager)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
         <!--<None Include="$(PkgEPPlus)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
         <None Include="$(PkgSystem_Text_Encoding_CodePages)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
@@ -94,6 +99,10 @@
 
         <None Include="$(OutputPath)\NPOI.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
         <None Include="$(OutputPath)\NPOI.OOXML.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)\NPOI.OpenXml4Net.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)\NPOI.OpenXmlFormats.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)\Datask.Tool.ExcelData.Core.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)\System.Configuration.ConfigurationManager.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
         <!--<None Include="$(OutputPath)\EPPlus.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
         <None Include="$(OutputPath)\System.Text.Encoding.CodePages.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
