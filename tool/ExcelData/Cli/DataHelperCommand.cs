@@ -21,6 +21,9 @@ public sealed class DataHelperCommand : BaseCommand
             return 0;
         }
 
+        if (string.IsNullOrEmpty(config.FilePath))
+            config.FilePath = Path.Combine(Directory.GetCurrentDirectory(), "TestDataHelper.cs");
+
         DataExtensionBuilder builder = new(config);
 
         builder.OnStatus += (_, args) =>
@@ -31,7 +34,7 @@ public sealed class DataHelperCommand : BaseCommand
 
         await builder.BuildDataExtensionAsync().ConfigureAwait(false);
 
-        AnsiConsole.MarkupLine($"The file generated successfully.");
+        AnsiConsole.MarkupLine($"The file {config.FilePath} generated successfully.");
 
         return 0;
     }

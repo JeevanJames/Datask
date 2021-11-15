@@ -6,6 +6,8 @@ public sealed record DataHelperConfiguration
 {
     public string Namespace { get; set; } = null!;
 
+    public string FilePath { get; set; } = null!;
+
     public IList<Flavors>? Flavors { get; set; }
 }
 

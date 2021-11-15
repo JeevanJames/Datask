@@ -27,12 +27,12 @@ public sealed class DataExtensionBuilder
         _configuration = configuration;
     }
 
-    public async Task<string> BuildDataExtensionAsync()
+    public async Task BuildDataExtensionAsync()
     {
         if (_configuration.Flavors is null)
-            return default!;
+            return;
 
-        string filePath = Path.Combine(Directory.GetCurrentDirectory(), "TestDataHelper.cs");
+        string filePath = _configuration.FilePath;
         RegisterTypes();
         File.WriteAllText(filePath, await RenderTemplate("PopulateDataTemplate", _configuration).ConfigureAwait(false));
 
@@ -85,8 +85,6 @@ public sealed class DataExtensionBuilder
         }
 
         File.AppendAllText(filePath, "}");
-
-        return File.ReadAllText(filePath);
     }
 
     private static void FillTableData(XSSFSheet sheet, TableDefinition td, out List<int> timestampCols, out int cellCount)
@@ -100,7 +98,7 @@ public sealed class DataExtensionBuilder
             if (cell == null || string.IsNullOrWhiteSpace(cell.ToString()))
                 continue;
 
-            string? cellComment = sheet.GetCellComment(cell.Address).String.ToString();
+            string? cellComment = cell.CellComment.String.ToString();
             if (cellComment is null)
                 continue;
 
