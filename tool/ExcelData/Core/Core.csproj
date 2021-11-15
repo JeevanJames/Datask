@@ -35,7 +35,6 @@
         <PackageReference Include="System.Text.Encodings.Web" Version="5.0.0" />
         <PackageReference Include="System.Text.Json" Version="5.0.0" />
         <PackageReference Include="DotNetCore.NPOI" Version="1.2.3" />
-        <!--<PackageReference Include="NPOI" Version="2.5.5" />-->
     </ItemGroup>
 
     <ItemGroup>
