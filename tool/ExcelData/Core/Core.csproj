@@ -6,11 +6,35 @@
         <AssemblyName>$(RootNamespace)</AssemblyName>
         <DocumentationFile>Properties\$(AssemblyName).xml</DocumentationFile>
         <Description>Datask ExcelData core library</Description>
+
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
 
     <ItemGroup>
+      <Content Remove="C:\Users\t6st\.nuget\packages\dotnetcore.npoi\1.2.3\contentFiles\any\netstandard2.0\NOTICE.TXT" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Templates\PopulateConsolidatedDataTemplate.liquid" />
+      <None Remove="Templates\PopulateDataTemplate.liquid" />
+      <None Remove="Templates\PopulateFlavorDataTemplate.liquid" />
+      <None Remove="Templates\PopulateTableDataTemplate.liquid" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="Templates\PopulateDataTemplate.liquid" />
+      <EmbeddedResource Include="Templates\PopulateConsolidatedDataTemplate.liquid" />
+      <EmbeddedResource Include="Templates\PopulateFlavorDataTemplate.liquid" />
+      <EmbeddedResource Include="Templates\PopulateTableDataTemplate.liquid" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="DotLiquid" Version="2.2.548" />
         <PackageReference Include="EPPlus" Version="4.5.3.3" />
         <PackageReference Include="System.Linq.Async" Version="5.0.0" />
+        <PackageReference Include="System.Text.Encodings.Web" Version="5.0.0" />
+        <PackageReference Include="System.Text.Json" Version="5.0.0" />
+        <PackageReference Include="DotNetCore.NPOI" Version="1.2.3" />
     </ItemGroup>
 
     <ItemGroup>

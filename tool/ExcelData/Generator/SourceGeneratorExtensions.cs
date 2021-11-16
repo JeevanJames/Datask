@@ -1,15 +1,10 @@
-﻿using Microsoft.CodeAnalysis;
+﻿
+using Microsoft.CodeAnalysis;
 
-namespace Datask.Tool.ExcelData.Generator.Extensions
+namespace Datask.Tool.ExcelData.Generator
 {
     internal static class SourceGeneratorExtensions
     {
-        internal static bool TryReadGlobalOption(this GeneratorExecutionContext context, string property,
-            out string? value)
-        {
-            return context.AnalyzerConfigOptions.GlobalOptions.TryGetValue($"build_property.{property}", out value);
-        }
-
         internal static bool TryReadAdditionalFilesOption(this GeneratorExecutionContext context,
             AdditionalText additionalText, string property, out string? value)
         {

@@ -1,27 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
-using Datask.Tool.ExcelData.Generator.Extensions;
-
-using DotLiquid;
-
-using ExcelDataReader;
+using Datask.Tool.ExcelData.Core;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-
-using NPOI.SS.UserModel;
-using NPOI.XSSF.UserModel;
 
 namespace Datask.Tool.ExcelData.Generator
 {
@@ -44,210 +28,87 @@ namespace Datask.Tool.ExcelData.Generator
 
         public void Execute(GeneratorExecutionContext context)
         {
-//#if DEBUG
-//            if (!System.Diagnostics.Debugger.IsAttached)
-//            {
-//                System.Diagnostics.Debugger.Launch();
-//            }
-//#endif
-            try
+#if DEBUG
+            if (!System.Diagnostics.Debugger.IsAttached)
             {
-                ReadExcelData(context);
+                System.Diagnostics.Debugger.Launch();
             }
-#pragma warning disable RCS1075 // Avoid empty catch clause that catches System.Exception.
-            catch (Exception)
-#pragma warning restore RCS1075 // Avoid empty catch clause that catches System.Exception.
-            {
-                //context.ReportDiagnostic(Diagnostic.Create(_dataBuilderExtensionErrorDescriptor, Location.None, $"{exception.Message} {exception.InnerException}"));
-            }
+#endif
+            CreateDataHelper(context);
         }
 
-        private void ReadExcelData(GeneratorExecutionContext context)
+        private void CreateDataHelper(GeneratorExecutionContext context)
         {
-            //Read Excel data
-            foreach (AdditionalText? file in context.AdditionalFiles)
+            DataHelperConfiguration? dataSetupConfiguration = new();
+            try
             {
-                if (!context.TryReadAdditionalFilesOption(file, "Type", out string? type) || type != "DataBuilderConfiguration")
-                    continue;
-
-                //Parse config file and fill the data model
-                string configurationJson = File.ReadAllText(file.Path);
-                DataModel? dataSetup = JsonSerializer.Deserialize<DataModel>(configurationJson, new JsonSerializerOptions
+                //Read Excel data
+                foreach (AdditionalText? file in context.AdditionalFiles)
                 {
-                    PropertyNameCaseInsensitive = true,
-                    AllowTrailingCommas = true,
-                    ReadCommentHandling = JsonCommentHandling.Skip,
-                    Converters =
+                    if (!context.TryReadAdditionalFilesOption(file, "Type", out string? type) || type != "DataBuilderConfiguration")
+                        continue;
+
+                    //Parse config file and fill the data model
+                    string configurationJson = File.ReadAllText(file.Path);
+                    dataSetupConfiguration = JsonSerializer.Deserialize<DataHelperConfiguration>(configurationJson, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        AllowTrailingCommas = true,
+                        ReadCommentHandling = JsonCommentHandling.Skip,
+                        Converters =
                     {
                         new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
                     },
-                });
+                    });
 
-                if (dataSetup?.Flavours is null)
-                    return;
+                    if (dataSetupConfiguration?.Flavors is null)
+                        continue;
 
-                foreach (Flavours? flavour in dataSetup.Flavours)
-                {
-                    using FileStream fs = new(flavour.ExcelPath, FileMode.Open, FileAccess.Read);
-                    IWorkbook xssWorkbook = new XSSFWorkbook(fs);
+                    if (string.IsNullOrEmpty(dataSetupConfiguration.FilePath))
+                        dataSetupConfiguration.FilePath = Path.Combine(Path.GetTempPath(), "TestDataHelper.cs");
 
-                    int noOfWorkSheets = xssWorkbook.NumberOfSheets;
-
-                    for (int index = 0; index < noOfWorkSheets; index++)
+                    //Get absolute path for excel files
+                    foreach (Flavors configFlavor in dataSetupConfiguration.Flavors!)
                     {
-                        TableData td = new();
-
-                        var sheet = (XSSFSheet)xssWorkbook.GetSheetAt(index);
-
-                        List<XSSFTable> xssfTables = sheet.GetTables();
-                        if (xssfTables.Any())
+                        if (!Path.IsPathRooted(configFlavor.ExcelPath))
                         {
-                            string[] tableName = xssfTables.First().DisplayName.Split('.');
-                            td.Name = tableName.Skip(1).First();
-                            td.Schema = tableName.Take(1).First();
+                            Uri myUri = new (new Uri(file.Path), configFlavor.ExcelPath);
+
+                            configFlavor.ExcelPath = myUri.LocalPath;
                         }
-
-                        IRow headerRow = sheet.GetRow(0);
-                        List<int> timestampCols = new();
-                        int cellCount = headerRow.LastCellNum;
-                        for (int j = 0; j < cellCount; j++)
-                        {
-                            ICell cell = headerRow.GetCell(j);
-                            if (cell == null || string.IsNullOrWhiteSpace(cell.ToString()))
-                                continue;
-
-                            string cellComment = sheet.GetCellComment(cell.Address).String.ToString();
-                            TableColumns? columnMetaData = JsonSerializer.Deserialize<TableColumns>(cellComment, new JsonSerializerOptions()
-                            {
-                                AllowTrailingCommas = true,
-                                PropertyNameCaseInsensitive = true,
-                            });
-
-                            (string CSharpAliasType, string DbType) valueTuple = TypeMappings.GetMappings(columnMetaData!.Type);
-
-                            //Store Timestamp columns and remove at last
-                            if (valueTuple.DbType == "SqlDbType.Timestamp")
-                                timestampCols.Add(j);
-
-                            td.TableColumns.Add(new TableColumns()
-                            {
-                                Name = cell.ToString(),
-                                DbType = valueTuple.DbType,
-                                CSharpType = valueTuple.CSharpAliasType,
-                                Type = columnMetaData.Type,
-                                IsIdentity = columnMetaData.IsIdentity,
-                            });
-
-                            if (columnMetaData.IsIdentity)
-                                td.ContainsIdentityColumn = true;
-                        }
-
-                        for (int i = sheet.FirstRowNum + 1; i <= sheet.LastRowNum; i++)
-                        {
-                            List<string?> rowList = new();
-                            IRow row = sheet.GetRow(i);
-                            if (row == null)
-                                continue;
-                            if (row.Cells.All(d => d.CellType == CellType.Blank))
-                                continue;
-
-                            for (int j = row.FirstCellNum; j < cellCount; j++)
-                            {
-                                //Skip timestamp column data
-                                if (timestampCols.Contains(j))
-                                    continue;
-
-                                rowList.Add(row.GetCell(j) == null ? "string.Empty" : ConvertObjectValToCSharpType(row.GetCell(j), td.TableColumns[j].Type));
-                            }
-
-                            if (rowList.Count > 0)
-                                td.DataRows.Add(rowList);
-                        }
-
-                        //Remove timestamp columns
-                        foreach (int cols in timestampCols)
-                        {
-                            td.TableColumns.RemoveAt(cols);
-                        }
-
-                        flavour.TableData.Add(td);
                     }
-                }
 
-                RenderTemplate(context, dataSetup);
+                    DataExtensionBuilder builder = new(dataSetupConfiguration);
+                    builder.BuildDataExtensionAsync().GetAwaiter().GetResult();
+
+                    //Read file stream and add to the source
+                    using FileStream fsSource = new (dataSetupConfiguration.FilePath, FileMode.Open, FileAccess.Read);
+                    context.AddSource("TestDataHelper.cs", SourceText.From(fsSource, Encoding.UTF8, canBeEmbedded: true));
+                }
+            }
+#pragma warning disable RCS1075 // Avoid empty catch clause that catches System.Exception.
+            catch (Exception exception)
+#pragma warning restore RCS1075 // Avoid empty catch clause that catches System.Exception.
+            {
+                context.ReportDiagnostic(Diagnostic.Create(_dataBuilderExtensionErrorDescriptor, Location.None, $"{exception.Message} {exception.InnerException}{exception.StackTrace}"));
+            }
+            finally
+            {
+                if (!string.IsNullOrEmpty(dataSetupConfiguration?.FilePath))
+                    File.Delete(dataSetupConfiguration?.FilePath);
             }
         }
 
-        private static string ConvertObjectValToCSharpType(object rowValue, string colType)
+        private string GetRelativePath(string filespec, string folder)
         {
-            return colType switch
+            Uri pathUri = new(filespec);
+            // Folders must end in a slash
+            if (!folder.EndsWith(Path.DirectorySeparatorChar.ToString()))
             {
-                "binary" => $"BitConverter.GetBytes(Convert.ToUInt64({rowValue}))",
-                "image" => $"BitConverter.GetBytes(Convert.ToUInt64({rowValue}))",
-                "timestamp" => $"BitConverter.GetBytes(Convert.ToUInt64({rowValue}))",
-                "varBinary" => $"BitConverter.GetBytes(Convert.ToUInt64({rowValue}))",
-                "bit" => rowValue.ToString() == "0" ? "false" : "true",
-                "char" => rowValue.ToString(),
-                "nchar" => rowValue.ToString(),
-                "ntext" => rowValue.ToString(),
-                "nvarchar" => rowValue.ToString(),
-                "text" => rowValue.ToString(),
-                "varchar" => rowValue.ToString(),
-                "xml" => rowValue.ToString(),
-                "datetime" => $"DateTime.Parse(\"{rowValue}\")",
-                "smalldatetime" => $"DateTime.Parse(\"{rowValue}\")",
-                "date" => $"DateTime.Parse(\"{rowValue}\")",
-                "time" => $"DateTime.Parse(\"{rowValue}\")",
-                "datetime2" => $"DateTime.Parse(\"{rowValue}\")",
-                "decimal" => $"{rowValue}",
-                "bigint" => $"{rowValue}",
-                "money" => $"{rowValue}",
-                "smallmoney" => $"{rowValue}",
-                "float" => $"{rowValue}",
-                "int" => $"{rowValue}",
-                "real" => $"{rowValue}",
-                "smallint" => $"{rowValue}",
-                "tinyint" => $"{rowValue}",
-                "uniqueidentifier" => $"new Guid((string){rowValue})",
-                "datetimeoffset" => $"DateTimeOffset.Parse((string){rowValue})",
-                _ => $"\"{rowValue}\"",
-            };
-        }
-
-        private void RenderTemplate(GeneratorExecutionContext context, DataModel dataModel)
-        {
-            Template.RegisterSafeType(typeof(DataModel),
-                typeof(DataModel).GetProperties().Select(p => p.Name).ToArray());
-            Template.RegisterSafeType(typeof(Flavours),
-                typeof(Flavours).GetProperties().Select(p => p.Name).ToArray());
-            Template.RegisterSafeType(typeof(TableData),
-                typeof(TableData).GetProperties().Select(p => p.Name).ToArray());
-            Template.RegisterSafeType(typeof(TableColumns),
-                typeof(TableColumns).GetProperties().Select(p => p.Name).ToArray());
-
-            Template template = ParseTemplate("DataExtensionTemplate", Assembly.GetExecutingAssembly(), GetType())
-                .GetAwaiter().GetResult();
-            string response = template.Render(Hash.FromAnonymousObject(new
-            {
-                d = dataModel,
-            }));
-
-            context.AddSource($"{dataModel.ClassName}.cs", SourceText.From(response, Encoding.UTF8));
-        }
-
-        /// <summary>
-        /// Parse Template.
-        /// </summary>
-        /// <param name="templateName">Template name.</param>
-        /// <param name="assembly">Executing assembly.</param>
-        /// <param name="type">object type.</param>
-        /// <returns>Template.</returns>
-        private static async Task<Template> ParseTemplate(string templateName, Assembly assembly, Type type)
-        {
-            Stream resourceStream = assembly.GetManifestResourceStream(type, $"Templates.{templateName}.liquid");
-            using StreamReader reader = new(resourceStream);
-            string modelTemplate = await reader.ReadToEndAsync();
-            return Template.Parse(modelTemplate);
+                folder += Path.DirectorySeparatorChar;
+            }
+            Uri folderUri = new (folder);
+            return Uri.UnescapeDataString(folderUri.MakeRelativeUri(pathUri).ToString().Replace('/', Path.DirectorySeparatorChar));
         }
     }
 }

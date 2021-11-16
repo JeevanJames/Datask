@@ -1,19 +1,18 @@
 {
     "Namespace": "EurofinsTestData",
-    "ClassName": "TestData",
-    "ConnectionString": "Server=.\\DEV2008;Integrated Security=true;",
-    "Flavours": [
+    "FilePath": "",
+    "Flavors": [
         {
             "Name": "Seed",
-            "ExcelPath": ".\\Configuration.xlsx"
+            "ExcelPath": "Configuration.xlsx"
         },
         {
             "Name": "Demo",
-            "ExcelPath": ".\\Configuration.xlsx"
+            "ExcelPath": "Configuration.xlsx"
         },
         {
             "Name": "Integration",
-            "ExcelPath": ".\\Configuration.xlsx"
+            "ExcelPath": "Configuration.xlsx"
         }
     ]
 }
