@@ -16,5 +16,4 @@
             await using SqlCommand command = new("SET IDENTITY_INSERT " + tableName + " OFF", connection);
             await command.ExecuteNonQueryAsync().ConfigureAwait(false);
         }
-    }
 

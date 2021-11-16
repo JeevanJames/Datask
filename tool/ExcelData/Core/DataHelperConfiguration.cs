@@ -17,5 +17,5 @@ public sealed record Flavors
 
     public string ExcelPath { get; set; } = null!;
 
-    public IList<TableDefinition> TableDefinitions { get; } = new List<TableDefinition>();
+    public IList<TableBindingModel> TableDefinitions { get; } = new List<TableBindingModel>();
 }

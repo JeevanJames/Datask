@@ -9,13 +9,13 @@
                     "INSERT INTO [{{model.table.schema}}].[{{model.table.name}}] ({% for tableColumn in model.table.columns -%} {{tableColumn.name}}{% if forloop.last == false -%}, {% endif -%}{% endfor -%})" +
                     "VALUES ({% for tableColumn in model.table.columns -%} @{{tableColumn.name}}{% if forloop.last == false -%}, {% endif -%}{% endfor -%});";
 
-                await using SqlCommand command = new(insertCommand, connection);
+                await using DbCommand command = new SqlCommand(insertCommand, connection);
 {%      for tableColumn in model.table.columns -%}
-                command.Parameters.Add("@{{tableColumn.name}}", @{{tableColumn.database_type}});
+                command.Parameters.Add(new SqlParameter() { DbType = {{tableColumn.database_type}}, ParameterName = "{{tableColumn.name}}" });
 {%      endfor -%}
 
 {%      for tableRows in model.dr -%}
-                await command.Execute{{model.table.schema}}{{model.table.name}}Data({% for rows in tableRows -%}{% assign row_index = forloop:index0 -%}{% if model.table.columns[row_index].database_type contains "VarChar" or model.table.columns[row_index].database_type contains "Xml" -%} {% if rows == "NULL" or rows == "null" %} null {% else %} "{{rows | replace: '\"', '\"'}}" {% endif %}{% else -%} {% if rows == "NULL" or rows == "null" %} null {% else %} {{rows}} {% endif %} {% endif -%} {% if forloop.last == false -%}, {% endif -%}{% endfor -%}).ConfigureAwait(false);
+                await command.Execute{{model.table.schema}}{{model.table.name}}Data({% for rows in tableRows -%}{% assign row_index = forloop:index0 -%}{% if model.table.columns[row_index].database_type contains "String" or model.table.columns[row_index].database_type contains "Xml" -%}{% if rows == "NULL" or rows == "null" %}null {% else %}"{{rows | replace: '\"', '\"'}}"{% endif %}{% else -%}{% if rows == "NULL" or rows == "null" %}null{% else %}{{rows}}{% endif %} {% endif -%}{% if forloop.last == false -%}, {% endif -%}{% endfor -%}).ConfigureAwait(false);
 {%      endfor -%}
             }
             finally
@@ -26,7 +26,7 @@
             }
         }
 
-        private static async Task Execute{{model.table.schema}}{{model.table.name}}Data(this SqlCommand command, {% for tableColumn in model.table.columns -%}{{tableColumn.c_sharp_type}}{% if tableColumn.is_nullable %}?{% endif %} {{tableColumn.name}}{% if forloop.last == false -%}, {% endif -%}{% endfor -%})
+        private static async Task Execute{{model.table.schema}}{{model.table.name}}Data(this DbCommand command, {% for tableColumn in model.table.columns -%}{{tableColumn.c_sharp_type}}{% if tableColumn.is_nullable %}?{% endif %} {{tableColumn.name}}{% if forloop.last == false -%}, {% endif -%}{% endfor -%})
         {
 {% for tableColumn in model.table.columns -%}
 {%      assign colindex = forloop:index0 -%}
