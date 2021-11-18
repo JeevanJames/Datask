@@ -28,12 +28,12 @@ namespace Datask.Tool.ExcelData.Generator
 
         public void Execute(GeneratorExecutionContext context)
         {
-#if DEBUG
-            if (!System.Diagnostics.Debugger.IsAttached)
-            {
-                System.Diagnostics.Debugger.Launch();
-            }
-#endif
+//#if DEBUG
+//            if (!System.Diagnostics.Debugger.IsAttached)
+//            {
+//                System.Diagnostics.Debugger.Launch();
+//            }
+//#endif
             CreateDataHelper(context);
         }
 
