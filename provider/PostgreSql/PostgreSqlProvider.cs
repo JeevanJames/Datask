@@ -6,26 +6,12 @@ using Npgsql;
 
 namespace Datask.Providers.PostgreSql;
 
-public sealed class PostgreSqlProvider : IProvider
+public sealed class PostgreSqlProvider : ProviderBase<NpgsqlConnection,
+    PostgreSqlSchemaQueryProvider,
+    PostgreSqlScriptGeneratorProvider>
 {
-    private readonly NpgsqlConnection _connection;
-    private readonly Lazy<ISchemaQueryProvider> _schemaProvider;
-
     public PostgreSqlProvider(string connectionString)
+        : base(connectionString, cs => new NpgsqlConnection(cs))
     {
-        _connection = new NpgsqlConnection(connectionString);
-        _schemaProvider = new(InitializeSchemaQuery);
-    }
-
-    public void Dispose()
-    {
-        _connection.Dispose();
-    }
-
-    public ISchemaQueryProvider SchemaQuery => _schemaProvider.Value;
-
-    private ISchemaQueryProvider InitializeSchemaQuery()
-    {
-        return new PostgreSqlSchemaQueryProvider(_connection);
     }
 }

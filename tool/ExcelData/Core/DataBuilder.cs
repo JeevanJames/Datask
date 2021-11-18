@@ -6,6 +6,7 @@ using CodeBits;
 
 using Datask.Common.Utilities;
 using Datask.Providers;
+using Datask.Providers.Schemas;
 using Datask.Providers.SqlServer;
 
 using OfficeOpenXml;

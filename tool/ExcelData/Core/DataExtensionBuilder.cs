@@ -4,7 +4,7 @@ using System.Text.Json;
 
 using CodeBits;
 
-using Datask.Providers;
+using Datask.Providers.Schemas;
 
 using DotLiquid;
 

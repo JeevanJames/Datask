@@ -1,4 +1,4 @@
-﻿using Datask.Providers;
+﻿using Datask.Providers.Schemas;
 
 namespace Datask.Tool.ExcelData.Core
 {

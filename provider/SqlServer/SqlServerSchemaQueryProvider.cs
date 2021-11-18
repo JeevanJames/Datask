@@ -6,6 +6,7 @@ using System.Data;
 
 using Dapper;
 
+using Datask.Providers.Schemas;
 using Datask.Providers.SqlServer.Scripts;
 
 using Microsoft.Data.SqlClient;

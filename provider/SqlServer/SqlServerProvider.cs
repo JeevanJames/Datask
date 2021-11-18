@@ -6,26 +6,12 @@ using Microsoft.Data.SqlClient;
 
 namespace Datask.Providers.SqlServer;
 
-public sealed class SqlServerProvider : IProvider
+public sealed class SqlServerProvider : ProviderBase<SqlConnection,
+    SqlServerSchemaQueryProvider,
+    SqlServerScriptGeneratorProvider>
 {
-    private readonly SqlConnection _connection;
-    private readonly Lazy<ISchemaQueryProvider> _schemaQueryProvider;
-
     public SqlServerProvider(string connectionString)
+        : base(connectionString, cs => new SqlConnection(cs))
     {
-        _connection = new SqlConnection(connectionString);
-        _schemaQueryProvider = new Lazy<ISchemaQueryProvider>(InitializeSchemaQuery);
-    }
-
-    public void Dispose()
-    {
-        _connection.Dispose();
-    }
-
-    public ISchemaQueryProvider SchemaQuery => _schemaQueryProvider.Value;
-
-    private ISchemaQueryProvider InitializeSchemaQuery()
-    {
-        return new SqlServerSchemaQueryProvider(_connection);
     }
 }
