@@ -5,6 +5,16 @@ using Datask.Providers.Scripts;
 
 namespace Datask.Providers;
 
+/// <summary>
+///     Useful base class for database providers that does all the work to setup the properties.
+/// </summary>
+/// <typeparam name="TConnection">The type of the database ADO.NET connection.</typeparam>
+/// <typeparam name="TSchemaQuery">
+///     The type of the schema query provider (<see cref="ISchemaQueryProvider"/>).
+/// </typeparam>
+/// <typeparam name="TScriptGenerator">
+///     The type of the script generator provider (<see cref="IScriptGeneratorProvider"/>).
+/// </typeparam>
 public abstract class ProviderBase<TConnection, TSchemaQuery, TScriptGenerator> : IProvider
     where TConnection: notnull, IDbConnection
     where TSchemaQuery : SchemaQueryProvider<TConnection>, ISchemaQueryProvider

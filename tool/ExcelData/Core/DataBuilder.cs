@@ -39,7 +39,7 @@ public sealed class DataBuilder
     private async Task FillExcelData(ExcelWorkbook workbook)
     {
         IProvider provider = new SqlServerProvider(_configuration.ConnectionString);
-        IList<TableDefinition> tables = await provider.SchemaQuery.EnumerateTables(new EnumerateTableOptions
+        IList<TableDefinition> tables = await provider.SchemaQuery.GetTables(new GetTableOptions
         {
             IncludeColumns = true,
             IncludeForeignKeys = true,

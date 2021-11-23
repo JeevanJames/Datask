@@ -6,31 +6,27 @@ using System.Diagnostics;
 
 namespace Datask.Providers.Schemas;
 
-[DebuggerDisplay("{Schema,nq}.{Name,nq}")]
+[DebuggerDisplay("{FullName,nq}")]
 public sealed record TableDefinition : IEquatable<TableDefinition?>, IEquatable<ForeignKeyDefinition?>
 {
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private readonly Lazy<IList<ColumnDefinition>> _columns = new(() => new List<ColumnDefinition>());
 
-    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private readonly Lazy<IList<ForeignKeyDefinition>> _foreignKeys = new(() => new List<ForeignKeyDefinition>());
-
-    public TableDefinition(string name, string schema)
+    public TableDefinition(string name, string schema, string fullName)
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
         Schema = schema ?? throw new ArgumentNullException(nameof(schema));
+        FullName = fullName ?? throw new ArgumentNullException(nameof(fullName));
     }
 
     public string Name { get; }
 
     public string Schema { get; }
 
-    public string FullName => $"{Schema}.{Name}";
+    public string FullName { get; }
 
     [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
     public IList<ColumnDefinition> Columns => _columns.Value;
-
-    public IList<ForeignKeyDefinition> ForeignKeys => _foreignKeys.Value;
 
     public bool Equals(TableDefinition? other)
     {

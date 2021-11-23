@@ -93,7 +93,7 @@ public sealed class DataExtensionBuilder
             var sheet = (XSSFSheet)xssWorkbook.GetSheetAt(index);
 
             List<XSSFTable> xssfTables = sheet.GetTables();
-            if (!xssfTables.Any())
+            if (xssfTables.Count == 0)
                 continue;
 
             string[] tableName = xssfTables.First().DisplayName.Split('.');
@@ -101,7 +101,7 @@ public sealed class DataExtensionBuilder
         }
 
         File.AppendAllText(filePath, await RenderTemplate("PopulateConsolidatedDataTemplate", tables
-           .Select(t => $"{t.Schema}{t.Name}")
+           .Select(t => t.Schema + t.Name)
            .ToList()).ConfigureAwait(false));
     }
 
@@ -184,44 +184,38 @@ public sealed class DataExtensionBuilder
             DbType.String => rowValue.ToString(),
             DbType.AnsiString => rowValue.ToString(),
             DbType.Xml => rowValue.ToString(),
-            DbType.DateTime => $"DateTime.Parse(\"{rowValue}\")",
-            DbType.Date => $"DateTime.Parse(\"{rowValue}\")",
-            DbType.Time => $"DateTime.Parse(\"{rowValue}\")",
-            DbType.DateTime2 => $"DateTime.Parse(\"{rowValue}\")",
-            DbType.Decimal => $"{rowValue}",
-            DbType.Int64 => $"{rowValue}",
-            DbType.Double => $"{rowValue}",
-            DbType.Int32 => $"{rowValue}",
-            DbType.Single => $"{rowValue}",
-            DbType.Int16 => $"{rowValue}",
-            DbType.Byte => $"{rowValue}",
+            DbType.DateTime => $@"DateTime.Parse(""{rowValue}"")",
+            DbType.Date => $@"DateTime.Parse(""{rowValue}"")",
+            DbType.Time => $@"DateTime.Parse(""{rowValue}"")",
+            DbType.DateTime2 => $@"DateTime.Parse(""{rowValue}"")",
+            DbType.Decimal => rowValue.ToString(),
+            DbType.Int64 => rowValue.ToString(),
+            DbType.Double => rowValue.ToString(),
+            DbType.Int32 => rowValue.ToString(),
+            DbType.Single => rowValue.ToString(),
+            DbType.Int16 => rowValue.ToString(),
+            DbType.Byte => rowValue.ToString(),
             DbType.Guid => $"new Guid((string){rowValue})",
             DbType.DateTimeOffset => $"DateTimeOffset.Parse((string){rowValue})",
-            _ => $"\"{rowValue}\"",
+            _ => $@"""{rowValue}""",
         };
     }
 
     private async Task<string> RenderTemplate(string templateName, object modelData)
     {
-        Template template = await ParseTemplate(templateName, Assembly.GetExecutingAssembly(), GetType());
-        return template.Render(Hash.FromAnonymousObject(new
-        {
-            model = modelData,
-        }));
+        Template template = await ParseTemplate(templateName, Assembly.GetExecutingAssembly(), GetType()).ConfigureAwait(false);
+        return template.Render(Hash.FromAnonymousObject(new { model = modelData }));
     }
 
     private static void RegisterTypes()
     {
-        Template.RegisterSafeType(typeof(Type),
-                    typeof(Type).GetProperties().Select(p => p.Name).ToArray());
+        Template.RegisterSafeType(typeof(Type), typeof(Type).GetProperties().Select(p => p.Name).ToArray());
         Template.RegisterSafeType(typeof(DataHelperConfiguration),
-                    typeof(DataHelperConfiguration).GetProperties().Select(p => p.Name).ToArray());
-        Template.RegisterSafeType(typeof(Flavors),
-            typeof(Flavors).GetProperties().Select(p => p.Name).ToArray());
+            typeof(DataHelperConfiguration).GetProperties().Select(p => p.Name).ToArray());
+        Template.RegisterSafeType(typeof(Flavors), typeof(Flavors).GetProperties().Select(p => p.Name).ToArray());
         Template.RegisterSafeType(typeof(TableBindingModel),
             typeof(TableDefinition).GetProperties().Select(p => p.Name).ToArray());
-        Template.RegisterSafeType(typeof(ColumnBindingModel),
-            typeof(ColumnBindingModel).GetProperties().Select(p => p.Name).ToArray());
+        Template.RegisterSafeType(typeof(ColumnBindingModel), typeof(ColumnBindingModel).GetProperties().Select(p => p.Name).ToArray());
         Template.RegisterSafeType(typeof(ColumnDefinition),
             typeof(ColumnDefinition).GetProperties().Select(p => p.Name).ToArray());
     }
@@ -237,7 +231,7 @@ public sealed class DataExtensionBuilder
     {
         Stream resourceStream = assembly.GetManifestResourceStream(type, $"Templates.{templateName}.liquid");
         using StreamReader reader = new(resourceStream);
-        string modelTemplate = await reader.ReadToEndAsync();
+        string modelTemplate = await reader.ReadToEndAsync().ConfigureAwait(false);
         return Template.Parse(modelTemplate);
     }
 }

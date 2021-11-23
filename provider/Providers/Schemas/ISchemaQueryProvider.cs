@@ -6,5 +6,7 @@ namespace Datask.Providers.Schemas;
 
 public interface ISchemaQueryProvider
 {
-    Task<IList<TableDefinition>> EnumerateTables(EnumerateTableOptions? options = null);
+    Task<IList<TableDefinition>> GetTables(GetTableOptions? options = null);
+
+    string GetFullTableName(string schema, string table);
 }

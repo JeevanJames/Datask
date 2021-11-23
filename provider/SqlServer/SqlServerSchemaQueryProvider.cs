@@ -20,7 +20,7 @@ public sealed class SqlServerSchemaQueryProvider : SchemaQueryProvider<SqlConnec
     {
     }
 
-    protected override async Task<IList<TableDefinition>> GetTables(EnumerateTableOptions options)
+    protected override async Task<IList<TableDefinition>> GetTablesInternal(GetTableOptions options)
     {
         // Get all table columns and foreign keys, if required.
         IEnumerable<dynamic>? allTableColumns = null;
@@ -44,7 +44,7 @@ public sealed class SqlServerSchemaQueryProvider : SchemaQueryProvider<SqlConnec
         List<TableDefinition> allTables = new();
         foreach (dynamic table in tables)
         {
-            TableDefinition tableDefn = new(table.Name, table.Schema);
+            TableDefinition tableDefn = new(table.Name, table.Schema, GetFullTableName(table.Schema, table.Name));
             if (allTableColumns is not null)
                 AssignColumns(tableDefn, allTableColumns);
             if (allTableReferences is not null)
@@ -52,7 +52,7 @@ public sealed class SqlServerSchemaQueryProvider : SchemaQueryProvider<SqlConnec
             allTables.Add(tableDefn);
         }
 
-        return allTables;
+        return FilterTables(allTables, options).ToList();
     }
 
     private static void AssignColumns(TableDefinition tableDefn, IEnumerable<dynamic> columns)
@@ -93,6 +93,11 @@ public sealed class SqlServerSchemaQueryProvider : SchemaQueryProvider<SqlConnec
             columnDefn.ForeignKey = new ForeignKeyDefinition((string)tableReference.ReferencedSchema,
                 (string)tableReference.ReferencedTable, (string)tableReference.ReferencedColumn);
         }
+    }
+
+    public override string GetFullTableName(string schema, string table)
+    {
+        return $"[{schema}].[{table}]";
     }
 }
 

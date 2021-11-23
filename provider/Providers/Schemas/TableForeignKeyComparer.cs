@@ -15,14 +15,18 @@ public sealed class TableForeignKeyComparer : Comparer<TableDefinition>
         if (y is null)
             return 1;
 
-        if (x.ForeignKeys.Count == 0 && y.ForeignKeys.Count == 0)
-            return 0;
+        var xForeignKeys = (from c in x.Columns
+                            where c.ForeignKey is not null
+                            select c.ForeignKey).ToList();
+        var yForeignKeys = (from c in y.Columns
+                            where c.ForeignKey is not null
+                            select c.ForeignKey).ToList();
 
-        if (x.ForeignKeys.Any(y.Equals))
+        if (xForeignKeys.Any(y.Equals))
             return 1;
-        if (y.ForeignKeys.Any(x.Equals))
+        if (yForeignKeys.Any(x.Equals))
             return -1;
-        if (x.ForeignKeys.Any(x.Equals) || y.ForeignKeys.Any(y.Equals))
+        if (xForeignKeys.Any(x.Equals) || yForeignKeys.Any(y.Equals))
             return 0;
 
         return 0;

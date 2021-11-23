@@ -11,7 +11,7 @@ public sealed class TestCommand : Command
         using IProvider provider = new SqlServerProvider(
             @"Server=(localdb)\MSSQLLocalDB;AttachDbFilename=D:\Temp\Northwnd.mdf;Trusted_Connection=Yes;");
         IList<TableDefinition> tables = await provider.SchemaQuery
-            .EnumerateTables(new EnumerateTableOptions { IncludeColumns = true, IncludeForeignKeys = true, });
+            .GetTables(new GetTableOptions { IncludeColumns = true, IncludeForeignKeys = true, });
 
         Sort(tables);
 

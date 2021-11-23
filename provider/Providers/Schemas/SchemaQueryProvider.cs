@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Data;
+using System.Text.RegularExpressions;
 
 namespace Datask.Providers.Schemas;
 
@@ -14,14 +15,33 @@ public abstract class SchemaQueryProvider<TConnection> : SubProviderBase<TConnec
     {
     }
 
-    public Task<IList<TableDefinition>> EnumerateTables(EnumerateTableOptions? options = null)
+    public Task<IList<TableDefinition>> GetTables(GetTableOptions? options = null)
     {
-        options ??= new EnumerateTableOptions();
+        options ??= new GetTableOptions();
         if (options.IncludeForeignKeys)
             options.IncludeColumns = true;
 
-        return GetTables(options);
+        return GetTablesInternal(options);
     }
 
-    protected abstract Task<IList<TableDefinition>> GetTables(EnumerateTableOptions options);
+    protected abstract Task<IList<TableDefinition>> GetTablesInternal(GetTableOptions options);
+
+    protected virtual IEnumerable<TableDefinition> FilterTables(IList<TableDefinition> allTables, GetTableOptions options)
+    {
+        IEnumerable<TableDefinition> tables = allTables;
+
+        foreach (Regex pattern in options.IncludeTables)
+            tables = tables.Where(t => pattern.IsMatch(t.FullName));
+
+        foreach (Regex pattern in options.ExcludeTables)
+            tables = tables.Where(t => !pattern.IsMatch(t.FullName));
+
+        return tables;
+    }
+
+    public virtual string GetFullTableName(string schema, string table)
+    {
+        return schema + "." + table;
+    }
+
 }
