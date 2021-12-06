@@ -7,11 +7,25 @@ using Microsoft.Data.SqlClient;
 namespace Datask.Providers.SqlServer;
 
 public sealed class SqlServerProvider : ProviderBase<SqlConnection,
+    SqlServerDbManagementProvider,
     SqlServerSchemaQueryProvider,
     SqlServerScriptGeneratorProvider>
 {
-    public SqlServerProvider(string connectionString)
-        : base(connectionString, cs => new SqlConnection(cs))
+    public SqlServerProvider(string connectionString, string? databaseName = null)
+        : base(connectionString, cs => new SqlConnection(cs), ValidateConnectionString, databaseName)
     {
+    }
+
+    private static string ValidateConnectionString(string connectionString, string? databaseName)
+    {
+        SqlConnectionStringBuilder builder = new(connectionString);
+        if (string.IsNullOrWhiteSpace(builder.InitialCatalog))
+        {
+            if (databaseName is null)
+                throw new InvalidOperationException($"The connection string '{connectionString}' does not specify a database name.");
+            builder.InitialCatalog = databaseName;
+        }
+
+        return builder.ConnectionString;
     }
 }
