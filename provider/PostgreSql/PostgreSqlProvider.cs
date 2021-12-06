@@ -22,7 +22,7 @@ public sealed class PostgreSqlProvider : ProviderBase<NpgsqlConnection,
         if (string.IsNullOrWhiteSpace(builder.Database))
         {
             if (databaseName is null)
-                throw new InvalidOperationException($"The connection string '{connectionString}' does not specify a database name.");
+                throw new ProviderException($"The connection string '{connectionString}' does not specify a database name.");
             builder.Database = databaseName;
         }
 

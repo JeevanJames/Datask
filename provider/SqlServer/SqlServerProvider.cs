@@ -22,7 +22,7 @@ public sealed class SqlServerProvider : ProviderBase<SqlConnection,
         if (string.IsNullOrWhiteSpace(builder.InitialCatalog))
         {
             if (databaseName is null)
-                throw new InvalidOperationException($"The connection string '{connectionString}' does not specify a database name.");
+                throw new ProviderException($"The connection string '{connectionString}' does not specify a database name.");
             builder.InitialCatalog = databaseName;
         }
 
