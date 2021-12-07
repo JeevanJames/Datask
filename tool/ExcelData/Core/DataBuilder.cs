@@ -139,7 +139,8 @@ public sealed class DataBuilder
             {
                 foreach (ExcelTable table in sheet.Tables)
                 {
-                    if (table.Name != columnDefn.ForeignKey!.Table)
+                    string foreignKeyTable = $"{columnDefn.ForeignKey!.Schema}.{columnDefn.ForeignKey.Table}";
+                    if (table.Name != foreignKeyTable)
                         continue;
 
                     int? fkColumnPosition = table.Columns[columnDefn.ForeignKey.Column]?.Id;
@@ -150,7 +151,7 @@ public sealed class DataBuilder
                     IExcelDataValidationList? fkDataValidation = worksheet.DataValidations.AddListValidation(columnDataRange);
                     string fkColumnLetter = ExcelCellAddress.GetColumnLetter((int)fkColumnPosition);
                     string validationFormula =
-                        $"='{columnDefn.ForeignKey.Schema}.{columnDefn.ForeignKey.Table}'!${fkColumnLetter}$2:${fkColumnLetter}${ExcelPackage.MaxRows}";
+                        $"='{foreignKeyTable}'!${fkColumnLetter}$2:${fkColumnLetter}${ExcelPackage.MaxRows}";
 
                     fkDataValidation.ShowErrorMessage = true;
                     fkDataValidation.Error = "The value cannot be empty.";
