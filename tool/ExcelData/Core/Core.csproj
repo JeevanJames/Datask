@@ -11,21 +11,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Content Remove="C:\Users\t6st\.nuget\packages\dotnetcore.npoi\1.2.3\contentFiles\any\netstandard2.0\NOTICE.TXT" />
+        <Content Remove="C:\Users\t6st\.nuget\packages\dotnetcore.npoi\1.2.3\contentFiles\any\netstandard2.0\NOTICE.TXT" />
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="Templates\PopulateConsolidatedDataTemplate.liquid" />
-      <None Remove="Templates\PopulateDataTemplate.liquid" />
-      <None Remove="Templates\PopulateFlavorDataTemplate.liquid" />
-      <None Remove="Templates\PopulateTableDataTemplate.liquid" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <EmbeddedResource Include="Templates\PopulateDataTemplate.liquid" />
-      <EmbeddedResource Include="Templates\PopulateConsolidatedDataTemplate.liquid" />
-      <EmbeddedResource Include="Templates\PopulateFlavorDataTemplate.liquid" />
-      <EmbeddedResource Include="Templates\PopulateTableDataTemplate.liquid" />
+        <EmbeddedResource Include="Templates\PopulateDataTemplate.liquid" />
+        <EmbeddedResource Include="Templates\PopulateConsolidatedDataTemplate.liquid" />
+        <EmbeddedResource Include="Templates\PopulateFlavorDataTemplate.liquid" />
+        <EmbeddedResource Include="Templates\PopulateTableDataTemplate.liquid" />
     </ItemGroup>
 
     <ItemGroup>
