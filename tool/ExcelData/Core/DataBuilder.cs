@@ -49,7 +49,7 @@ public sealed class DataBuilder
         foreach (TableDefinition table in tables)
         {
             OnStatus.Fire(StatusEvents.Generate,
-                new { Table = table.FullName },
+                new { Table = $"{table.Schema}.{table.Name}" },
                 "Getting database table {Table} information.");
 
             if (!TryCreateWorksheet(workbook, table, out ExcelWorksheet? worksheet))
@@ -100,10 +100,11 @@ public sealed class DataBuilder
             return false;
         }
 
+        string tableFullName = $"{table.Schema}.{table.Name}";
         Random random = new((int)DateTime.Now.Ticks);
-        string worksheetName = table.FullName.Length > 31
-            ? $"{table.FullName.Substring(0, 24)}...{random.Next(1, 99)}"
-            : table.FullName;
+        string worksheetName = tableFullName.Length > 31
+            ? $"{tableFullName.Substring(0, 24)}...{random.Next(1, 99)}"
+            : tableFullName;
 
         worksheet = workbook.Worksheets.Add(worksheetName);
         return true;
@@ -252,7 +253,7 @@ public sealed class DataBuilder
         tableRange.Style.Border.Bottom.Style = ExcelBorderStyle.Medium;
 
         //Adding a table to a Range
-        ExcelTable excelTable = worksheet.Tables.Add(tableRange, table.FullName);
+        ExcelTable excelTable = worksheet.Tables.Add(tableRange, $"{table.Schema}.{table.Name}");
 
         //Formatting the table style
         excelTable.TableStyle = TableStyles.Dark10;
