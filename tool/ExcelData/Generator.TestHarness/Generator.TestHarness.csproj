@@ -15,16 +15,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Remove="Configuration.xlsx" />
         <None Remove="dataConfig.json" />
     </ItemGroup>
 
     <ItemGroup>
         <AdditionalFiles Include="dataConfig.json" Type="DataBuilderConfiguration" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <EmbeddedResource Include="Configuration.xlsx" />
     </ItemGroup>
 
     <ItemGroup>
