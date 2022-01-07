@@ -1,18 +1,18 @@
 {
-    "Namespace": "EurofinsTestData",
+    "Namespace": "TestNameSpace",
     "FilePath": "",
     "Flavors": [
         {
             "Name": "Seed",
-            "ExcelPath": "Configuration.xlsx"
+            "ExcelPath": "SampleData.xlsx"
         },
         {
             "Name": "Demo",
-            "ExcelPath": "Configuration.xlsx"
+            "ExcelPath": "SampleData.xlsx"
         },
         {
             "Name": "Integration",
-            "ExcelPath": "Configuration.xlsx"
+            "ExcelPath": "SampleData.xlsx"
         }
     ]
 }
