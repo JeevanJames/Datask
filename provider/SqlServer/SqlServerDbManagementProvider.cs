@@ -45,6 +45,11 @@ public sealed class SqlServerDbManagementProvider : DbManagementProvider<SqlConn
         return server.Databases[databaseName] is not null;
     }
 
+    public override Task ExecuteScriptAsync(IAsyncEnumerable<string> scripts)
+    {
+        throw new NotImplementedException();
+    }
+
     private (Server, string) GetServerAndDatabaseName()
     {
         return (new(new ServerConnection(Connection)),

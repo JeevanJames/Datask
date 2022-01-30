@@ -10,5 +10,10 @@ namespace Datask.Providers.PostgreSql
             : base(connection)
         {
         }
+
+        public override Task ExecuteScriptAsync(IAsyncEnumerable<string> scripts)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

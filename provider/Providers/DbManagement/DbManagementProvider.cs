@@ -10,12 +10,12 @@ public abstract class DbManagementProvider<TConnection> : SubProviderBase<TConne
     {
     }
 
-    public virtual Task<bool> DatabaseExistsAsync()
+    public virtual Task<bool> TryCreateDatabaseAsync()
     {
-        return Task.FromResult(DatabaseExists());
+        return Task.FromResult(TryCreateDatabase());
     }
 
-    protected virtual bool DatabaseExists()
+    protected virtual bool TryCreateDatabase()
     {
         throw new NotImplementedException();
     }
@@ -31,13 +31,15 @@ public abstract class DbManagementProvider<TConnection> : SubProviderBase<TConne
         throw new NotImplementedException();
     }
 
-    public virtual Task<bool> TryCreateDatabaseAsync()
+    public virtual Task<bool> DatabaseExistsAsync()
     {
-        return Task.FromResult(TryCreateDatabase());
+        return Task.FromResult(DatabaseExists());
     }
 
-    protected virtual bool TryCreateDatabase()
+    protected virtual bool DatabaseExists()
     {
         throw new NotImplementedException();
     }
+
+    public abstract Task ExecuteScriptAsync(IAsyncEnumerable<string> scripts);
 }

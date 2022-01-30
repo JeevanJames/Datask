@@ -7,4 +7,6 @@ public interface IDbManagementProvider
     Task DeleteDatabaseAsync();
 
     Task<bool> DatabaseExistsAsync();
+
+    Task ExecuteScriptAsync(IAsyncEnumerable<string> scripts);
 }

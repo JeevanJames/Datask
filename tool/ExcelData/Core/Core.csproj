@@ -22,11 +22,11 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="DotLiquid" Version="2.2.548" />
-        <PackageReference Include="EPPlus" Version="4.5.3.3" />
-        <PackageReference Include="System.Linq.Async" Version="5.0.0" />
-        <PackageReference Include="System.Text.Encodings.Web" Version="5.0.0" />
-        <PackageReference Include="System.Text.Json" Version="5.0.0" />
+        <PackageReference Include="DotLiquid" Version="2.2.595" />
+        <PackageReference Include="EPPlus" Version="[4.5.3.3,5)" />
+        <PackageReference Include="System.Linq.Async" Version="5.1.0" />
+        <PackageReference Include="System.Text.Encodings.Web" Version="6.0.0" />
+        <PackageReference Include="System.Text.Json" Version="6.0.1" />
         <PackageReference Include="DotNetCore.NPOI" Version="1.2.3" />
     </ItemGroup>
 

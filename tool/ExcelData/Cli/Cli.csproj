@@ -28,8 +28,8 @@
     <ItemGroup>
         <PackageReference Include="ConsoleFx.CmdLine.Program" Version="2.0.0-build.420" />
         <PackageReference Include="ConsoleFx.Prompter" Version="2.0.0-build.420" />
-        <PackageReference Include="Spectre.Console" Version="0.42.1-preview.0.2" />
-        <PackageReference Include="System.Linq.Async" Version="5.0.0" />
+        <PackageReference Include="Spectre.Console" Version="0.43.0" />
+        <PackageReference Include="System.Linq.Async" Version="5.1.0" />
     </ItemGroup>
 
     <ItemGroup>
