@@ -24,6 +24,7 @@
     <ItemGroup>
         <PackageReference Include="DotLiquid" Version="2.2.595" />
         <PackageReference Include="EPPlus" Version="[4.5.3.3,5)" />
+        <PackageReference Include="JsonDiffPatch.Net" Version="2.3.0" />
         <PackageReference Include="System.Linq.Async" Version="5.1.0" />
         <PackageReference Include="System.Text.Encodings.Web" Version="6.0.0" />
         <PackageReference Include="System.Text.Json" Version="6.0.1" />

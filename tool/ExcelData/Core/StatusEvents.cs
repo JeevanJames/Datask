@@ -5,4 +5,5 @@ public enum StatusEvents
     Generate,
     Verify,
     Update,
+    Validate
 }
