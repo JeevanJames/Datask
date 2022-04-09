@@ -9,7 +9,7 @@ public sealed class TestCommand : Command
     public override async Task<int> HandleCommandAsync(IParseResult parseResult)
     {
         using IProvider provider = new SqlServerProvider(
-            @"Server=(localdb)\MSSQLLocalDB;AttachDbFilename=D:\Temp\Northwnd.mdf;Trusted_Connection=Yes;");
+            @"Server=(localdb)\MSSQLLocalDB;AttachDbFileName=D:\Temp\Northwnd.mdf;Database=NW;Trusted_Connection=Yes;");
         IList<TableDefinition> tables = await provider.SchemaQuery
             .GetTables(new GetTableOptions { IncludeColumns = true, IncludeForeignKeys = true, });
 
@@ -26,7 +26,7 @@ public sealed class TestCommand : Command
                 {
                     string format = $"    {(column.IsIdentity ? "[CadetBlue][[PK]][/]" : string.Empty)}" +
                                     $"[green]{column.Name.EscapeMarkup()}[/]{(column.IsNullable ? "*" : string.Empty)}: " +
-                                    $"[white]{column.DatabaseType.EscapeMarkup()}, {column.Type.Name.EscapeMarkup()}, {column.DbType}[/]";
+                                    $"[white]{column.DatabaseType.EscapeMarkup()}, {column.ClrType.Name.EscapeMarkup()}, {column.DbType}[/]";
                     AnsiConsole.MarkupLine(format);
 
                     if (column.ForeignKey is not null)

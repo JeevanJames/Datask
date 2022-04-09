@@ -2,6 +2,7 @@
 // This file is licensed to you under the MIT License.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 
 namespace Datask.Providers.Schemas;
@@ -47,5 +48,30 @@ public sealed record TableDefinition : IEquatable<TableDefinition?>, IEquatable<
     public override int GetHashCode()
     {
         return $"{Schema}.{Name}".GetHashCode();
+    }
+}
+
+public sealed class TableDefinitionCollection : Collection<TableDefinition>
+{
+    public TableDefinitionCollection()
+    {
+    }
+
+    public TableDefinitionCollection(IList<TableDefinition> list)
+        : base(list)
+    {
+    }
+
+    public void SortByForeignKeyDependencies()
+    {
+        TableForeignKeyComparer comparer = new();
+        for (int i = 0; i < Count - 1; i++)
+        {
+            for (int j = i + 1; j < Count; j++)
+            {
+                if (comparer.Compare(this[i], this[j]) > 0)
+                    (this[i], this[j]) = (this[j], this[i]);
+            }
+        }
     }
 }

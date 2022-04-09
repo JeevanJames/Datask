@@ -32,19 +32,18 @@ public sealed class GenerateCommand : BaseCommand
             ExcelFile.Delete();
         }
 
-        DataConfiguration configuration = new() { ConnectionString = ConnectionString, FilePath = ExcelFile, };
+        ExcelGeneratorOptions options = new(ConnectionString, ExcelFile);
+        options.IncludeTables.AddRange(IncludeTables.Distinct());
+        options.ExcludeTables.AddRange(ExcludeTables.Distinct());
 
-        configuration.IncludeTables.AddRange(IncludeTables.Distinct());
-        configuration.ExcludeTables.AddRange(ExcludeTables.Distinct());
-
-        DataBuilder builder = new(configuration);
+        ExcelGenerator builder = new(options);
         builder.OnStatus += (_, args) =>
         {
             ctx.Status(args.Message ?? string.Empty);
             ctx.Refresh();
         };
 
-        await builder.ExportExcel().ConfigureAwait(false);
+        await builder.GenerateAsync().ConfigureAwait(false);
         AnsiConsole.MarkupLine($"The file {ExcelFile.FullName} generated successfully.");
 
         return 0;

@@ -15,7 +15,7 @@ public sealed class PostgreSqlSchemaQueryProvider : SchemaQueryProvider<NpgsqlCo
     {
     }
 
-    protected override Task<IList<TableDefinition>> GetTablesInternal(GetTableOptions options)
+    protected override Task<TableDefinitionCollection> GetTablesTask(GetTableOptions options)
     {
         throw new NotImplementedException();
     }

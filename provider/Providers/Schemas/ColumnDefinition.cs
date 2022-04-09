@@ -19,11 +19,11 @@ public class ColumnDefinition
 
     public string DatabaseType { get; set; } = null!;
 
-    public Type Type { get; set; } = null!;
-
-    public int MaxLength { get; set; }
+    public Type ClrType { get; set; } = null!;
 
     public DbType DbType { get; set; }
+
+    public int MaxLength { get; set; }
 
     public bool IsNullable { get; set; }
 

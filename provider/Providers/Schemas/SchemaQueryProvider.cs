@@ -15,16 +15,16 @@ public abstract class SchemaQueryProvider<TConnection> : SubProviderBase<TConnec
     {
     }
 
-    public Task<IList<TableDefinition>> GetTables(GetTableOptions? options = null)
+    public Task<TableDefinitionCollection> GetTables(GetTableOptions? options = null)
     {
         options ??= new GetTableOptions();
         if (options.IncludeForeignKeys)
             options.IncludeColumns = true;
 
-        return GetTablesInternal(options);
+        return GetTablesTask(options);
     }
 
-    protected abstract Task<IList<TableDefinition>> GetTablesInternal(GetTableOptions options);
+    protected abstract Task<TableDefinitionCollection> GetTablesTask(GetTableOptions options);
 
     protected virtual IEnumerable<TableDefinition> FilterTables(IList<TableDefinition> allTables, GetTableOptions options)
     {

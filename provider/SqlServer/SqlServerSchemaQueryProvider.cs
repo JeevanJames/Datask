@@ -20,7 +20,7 @@ public sealed class SqlServerSchemaQueryProvider : SchemaQueryProvider<SqlConnec
     {
     }
 
-    protected override async Task<IList<TableDefinition>> GetTablesInternal(GetTableOptions options)
+    protected override async Task<TableDefinitionCollection> GetTablesTask(GetTableOptions options)
     {
         // Get all table columns and foreign keys, if required.
         IEnumerable<dynamic>? allTableColumns = null;
@@ -52,20 +52,20 @@ public sealed class SqlServerSchemaQueryProvider : SchemaQueryProvider<SqlConnec
             allTables.Add(tableDefn);
         }
 
-        return FilterTables(allTables, options).ToList();
+        return new TableDefinitionCollection(FilterTables(allTables, options).ToList());
     }
 
-    private static void AssignColumns(TableDefinition tableDefn, IEnumerable<dynamic> columns)
+    private static void AssignColumns(TableDefinition table, IEnumerable<dynamic> dynamicColumns)
     {
-        IEnumerable<ColumnDefinition> columnDefns = columns
-            .Where(c => tableDefn.Name.Equals((string)c.Table) && tableDefn.Schema.Equals((string)c.Schema))
+        IEnumerable<ColumnDefinition> columns = dynamicColumns
+            .Where(c => table.Name.Equals((string)c.Table) && table.Schema.Equals((string)c.Schema))
             .Select(c =>
             {
-                (Type Type, DbType DbType) mappings = TypeMappings.GetMappings(c.DbDataType);
+                (Type ClrType, DbType DbType) mappings = TypeMappings.GetMappings(c.DbDataType);
                 return new ColumnDefinition(c.Name)
                 {
                     DatabaseType = c.DbDataType,
-                    Type = mappings.Type,
+                    ClrType = mappings.ClrType,
                     MaxLength = c.MaxLength is null ? 0 : (int)c.MaxLength,
                     DbType = mappings.DbType,
                     IsNullable = c.IsNullable,
@@ -74,23 +74,23 @@ public sealed class SqlServerSchemaQueryProvider : SchemaQueryProvider<SqlConnec
                 };
             });
 
-        foreach (ColumnDefinition columnDefn in columnDefns)
-            tableDefn.Columns.Add(columnDefn);
+        foreach (ColumnDefinition column in columns)
+            table.Columns.Add(column);
     }
 
-    private static void AssignReferences(TableDefinition tableDefn, IEnumerable<dynamic> references)
+    private static void AssignReferences(TableDefinition table, IEnumerable<dynamic> references)
     {
-        IEnumerable<dynamic> tableReferences = references
-            .Where(r => tableDefn.Name.Equals((string)r.ReferencingTable)
-                        && tableDefn.Schema.Equals((string)r.ReferencingSchema));
+        IEnumerable<dynamic> tableReferences = references.Where(r => table.Name.Equals((string)r.ReferencingTable)
+            && table.Schema.Equals((string)r.ReferencingSchema));
 
         foreach (dynamic tableReference in tableReferences)
         {
             string columnName = (string)tableReference.ReferencingColumn;
-            ColumnDefinition columnDefn = tableDefn.Columns.Single(cd => cd.Name.Equals(columnName, StringComparison.Ordinal));
-            if (columnDefn.ForeignKey is not null)
+            ColumnDefinition column = table.Columns
+                .Single(cd => cd.Name.Equals(columnName, StringComparison.Ordinal));
+            if (column.ForeignKey is not null)
                 throw new InvalidOperationException();
-            columnDefn.ForeignKey = new ForeignKeyDefinition((string)tableReference.ReferencedSchema,
+            column.ForeignKey = new ForeignKeyDefinition((string)tableReference.ReferencedSchema,
                 (string)tableReference.ReferencedTable, (string)tableReference.ReferencedColumn);
         }
     }
@@ -103,45 +103,42 @@ public sealed class SqlServerSchemaQueryProvider : SchemaQueryProvider<SqlConnec
 
 internal static class TypeMappings
 {
-    internal static (Type Type, DbType DbType) GetMappings(string dbType)
+    internal static (Type ClrType, DbType DbType) GetMappings(string dbType)
     {
-        return _mappings.TryGetValue(dbType, out (Type Type, DbType DbType) mapping)
-            ? mapping
-            : (typeof(object), DbType.Object);
+        return dbType switch
+        {
+            "bigint" => (typeof(long), DbType.Int64),
+            "binary" => (typeof(byte[]), DbType.Binary),
+            "bit" => (typeof(bool), DbType.Boolean),
+            "char" => (typeof(string), DbType.AnsiStringFixedLength),
+            "date" => (typeof(DateTime), DbType.Date),
+            "datetime" => (typeof(DateTime), DbType.DateTime),
+            "datetime2" => (typeof(DateTime), DbType.DateTime2),
+            "datetimeoffset" => (typeof(DateTimeOffset), DbType.DateTimeOffset),
+            "decimal" => (typeof(decimal), DbType.Decimal),
+            "float" => (typeof(double), DbType.Double),
+            "image" => (typeof(byte[]), DbType.Binary),
+            "int" => (typeof(int), DbType.Int32),
+            "money" => (typeof(decimal), DbType.Decimal),
+            "nchar" => (typeof(string), DbType.StringFixedLength),
+            "ntext" => (typeof(string), DbType.String),
+            "numeric" => (typeof(decimal), DbType.Decimal),
+            "nvarchar" => (typeof(string), DbType.String),
+            "real" => (typeof(float), DbType.Single),
+            "rowversion" => (typeof(byte[]), DbType.Binary),
+            "smalldatetime" => (typeof(DateTime), DbType.DateTime),
+            "smallint" => (typeof(short), DbType.Int16),
+            "smallmoney" => (typeof(decimal), DbType.Decimal),
+            "sql_variant" => (typeof(object), DbType.Object),
+            "text" => (typeof(string), DbType.String),
+            "time" => (typeof(TimeSpan), DbType.Time),
+            "timestamp" => (typeof(byte[]), DbType.Binary),
+            "tinyint" => (typeof(byte), DbType.Byte),
+            "uniqueidentifier" => (typeof(Guid), DbType.Guid),
+            "varbinary" => (typeof(byte[]), DbType.Binary),
+            "varchar" => (typeof(string), DbType.AnsiString),
+            "xml" => (typeof(string), DbType.Xml),
+            _ => (typeof(object), DbType.Object),
+        };
     }
-
-    private static readonly Dictionary<string, (Type Type, DbType DbType)> _mappings = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["bigint"] = (typeof(long), DbType.Int64),
-        ["binary"] = (typeof(byte[]), DbType.Binary),
-        ["bit"] = (typeof(bool), DbType.Boolean),
-        ["char"] = (typeof(string), DbType.AnsiStringFixedLength),
-        ["date"] = (typeof(DateTime), DbType.Date),
-        ["datetime"] = (typeof(DateTime), DbType.DateTime),
-        ["datetime2"] = (typeof(DateTime), DbType.DateTime2),
-        ["datetimeoffset"] = (typeof(DateTimeOffset), DbType.DateTimeOffset),
-        ["decimal"] = (typeof(decimal), DbType.Decimal),
-        ["float"] = (typeof(double), DbType.Double),
-        ["image"] = (typeof(byte[]), DbType.Binary),
-        ["int"] = (typeof(int), DbType.Int32),
-        ["money"] = (typeof(decimal), DbType.Decimal),
-        ["nchar"] = (typeof(string), DbType.StringFixedLength),
-        ["ntext"] = (typeof(string), DbType.String),
-        ["numeric"] = (typeof(decimal), DbType.Decimal),
-        ["nvarchar"] = (typeof(string), DbType.String),
-        ["real"] = (typeof(float), DbType.Single),
-        ["rowversion"] = (typeof(byte[]), DbType.Binary),
-        ["smalldatetime"] = (typeof(DateTime), DbType.DateTime),
-        ["smallint"] = (typeof(short), DbType.Int16),
-        ["smallmoney"] = (typeof(decimal), DbType.Decimal),
-        ["sql_variant"] = (typeof(object), DbType.Object),
-        ["text"] = (typeof(string), DbType.String),
-        ["time"] = (typeof(TimeSpan), DbType.Time),
-        ["timestamp"] = (typeof(byte[]), DbType.Binary),
-        ["tinyint"] = (typeof(byte), DbType.Byte),
-        ["uniqueidentifier"] = (typeof(Guid), DbType.Guid),
-        ["varbinary"] = (typeof(byte[]), DbType.Binary),
-        ["varchar"] = (typeof(string), DbType.AnsiString),
-        ["xml"] = (typeof(string), DbType.Xml),
-    };
 }
