@@ -1,6 +1,8 @@
-﻿namespace Datask.Tool.ExcelData.Core;
+﻿using Datask.Tool.ExcelData.Core.Bases;
 
-public sealed class ExcelGeneratorOptions
+namespace Datask.Tool.ExcelData.Core;
+
+public sealed class ExcelGeneratorOptions : ExecutorOptions
 {
     public ExcelGeneratorOptions(string connectionString, FileInfo excelFilePath)
     {

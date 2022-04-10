@@ -2,12 +2,11 @@
 using System.Globalization;
 using System.Text.Json;
 
-using CodeBits;
-
 using Datask.Common.Utilities;
 using Datask.Providers;
 using Datask.Providers.Schemas;
 using Datask.Providers.SqlServer;
+using Datask.Tool.ExcelData.Core.Bases;
 
 using OfficeOpenXml;
 using OfficeOpenXml.DataValidation.Contracts;
@@ -16,24 +15,21 @@ using OfficeOpenXml.Table;
 
 namespace Datask.Tool.ExcelData.Core;
 
-public sealed class ExcelGenerator
+public sealed class ExcelGenerator : Executor<ExcelGeneratorOptions, StatusEvents>
 {
-#pragma warning disable S3264 // Events should be invoked
-    public event EventHandler<StatusEventArgs<StatusEvents>> OnStatus = null!;
-#pragma warning restore S3264 // Events should be invoked
-
     private readonly ExcelGeneratorOptions _options;
 
     public ExcelGenerator(ExcelGeneratorOptions options)
+        : base(options)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
     }
 
-    public async Task GenerateAsync()
+    public override async Task ExecuteAsync()
     {
         using ExcelPackage package = new(_options.ExcelFilePath);
         await FillExcelData(package.Workbook).ConfigureAwait(false);
-         package.Save();
+        package.Save();
     }
 
     private async Task FillExcelData(ExcelWorkbook workbook)
@@ -48,10 +44,11 @@ public sealed class ExcelGenerator
 
         foreach (TableDefinition table in tables)
         {
-            OnStatus.Fire(StatusEvents.Generate,
-                new { Table = $"{table.Schema}.{table.Name}" },
-                "Getting database table {Table} information.");
+            FireStatusEvent(StatusEvents.Generate,
+                "Getting database table {Table} information.",
+                new { Table = $"{table.Schema}.{table.Name}" });
 
+            // Try creating the worksheet for the table, if it doesn't already exist.
             if (!TryCreateWorksheet(workbook, table, out ExcelWorksheet? worksheet))
                 continue;
 
@@ -63,7 +60,7 @@ public sealed class ExcelGenerator
                 worksheet.Cells[1, columnIndex].AutoFitColumns();
 
                 ApplyDataValidations(worksheet, columnIndex, table);
-                AddColumnMetaData(worksheet, columnIndex, table);
+                AddColumnMetadata(worksheet, columnIndex, table);
 
                 columnIndex++;
             }
@@ -96,9 +93,9 @@ public sealed class ExcelGenerator
         return true;
     }
 
-    private static void ApplyDataValidations(ExcelWorksheet worksheet, int columnIndex, TableDefinition tableInfo)
+    private static void ApplyDataValidations(ExcelWorksheet worksheet, int columnIndex, TableDefinition table)
     {
-        ColumnDefinition columnDefn = tableInfo.Columns[columnIndex - 1];
+        ColumnDefinition column = table.Columns[columnIndex - 1];
 
         string columnDataRange = ExcelCellBase.GetAddress(2, columnIndex, ExcelPackage.MaxRows, columnIndex);
 
@@ -120,25 +117,23 @@ public sealed class ExcelGenerator
         //    pkCustomDataValidation.Formula.ExcelFormula = pkValidationFormula;
         //}
 
-        if (columnDefn.IsForeignKey && !columnDefn.IsPrimaryKey)
+        if (column.IsForeignKey && !column.IsPrimaryKey)
         {
-            foreach (ExcelWorksheet sheet in worksheet.Workbook.Worksheets)
+            string foreignKeyTableName = $"{column.ForeignKey.Schema}.{column.ForeignKey.Table}";
+            ExcelTable? excelTable = worksheet.Workbook.Worksheets.SelectMany(ws => ws.Tables)
+                .FirstOrDefault(t => t.Name == foreignKeyTableName);
+
+            if (excelTable is not null)
             {
-                foreach (ExcelTable table in sheet.Tables)
+                int? fkColumnPosition = excelTable.Columns[column.ForeignKey.Column]?.Id;
+                if (fkColumnPosition is not null)
                 {
-                    string foreignKeyTable = $"{columnDefn.ForeignKey!.Schema}.{columnDefn.ForeignKey.Table}";
-                    if (table.Name != foreignKeyTable)
-                        continue;
-
-                    int? fkColumnPosition = table.Columns[columnDefn.ForeignKey.Column]?.Id;
-                    if (fkColumnPosition is null)
-                        continue;
-
                     //var fkCellRange = ExcelRange.GetAddress(2, i, ExcelPackage.MaxRows, i);
-                    IExcelDataValidationList? fkDataValidation = worksheet.DataValidations.AddListValidation(columnDataRange);
+                    IExcelDataValidationList? fkDataValidation =
+                        worksheet.DataValidations.AddListValidation(columnDataRange);
                     string fkColumnLetter = ExcelCellAddress.GetColumnLetter((int)fkColumnPosition);
                     string validationFormula =
-                        $"='{foreignKeyTable}'!${fkColumnLetter}$2:${fkColumnLetter}${ExcelPackage.MaxRows}";
+                        $"='{foreignKeyTableName}'!${fkColumnLetter}$2:${fkColumnLetter}${ExcelPackage.MaxRows}";
 
                     fkDataValidation.ShowErrorMessage = true;
                     fkDataValidation.Error = "The value cannot be empty.";
@@ -147,7 +142,7 @@ public sealed class ExcelGenerator
             }
         }
 
-        switch (columnDefn.ClrType)
+        switch (column.ClrType)
         {
             case { } dt when dt == typeof(DateTime) || dt == typeof(DateTimeOffset):
                 worksheet.Column(columnIndex).Style.Numberformat.Format = DateTimeFormatInfo.CurrentInfo.ShortDatePattern;
@@ -161,11 +156,11 @@ public sealed class ExcelGenerator
                 AddBooleanValidation(worksheet, columnDataRange);
                 break;
 
-            case { } s when s == typeof(string) && columnDefn.MaxLength > 0:
+            case { } s when s == typeof(string) && column.MaxLength > 0:
                 AddStringLengthValidation(worksheet, columnDataRange);
                 break;
 
-            case { } intType when intType == typeof(int) && !columnDefn.IsForeignKey:
+            case { } intType when intType == typeof(int) && !column.IsForeignKey:
                 AddIntegerValidation(worksheet, columnDataRange);
                 break;
         }
@@ -203,7 +198,7 @@ public sealed class ExcelGenerator
         }
     }
 
-    private static void AddColumnMetaData(ExcelWorksheet worksheet, int columnIndex, TableDefinition tableInfo)
+    private static void AddColumnMetadata(ExcelWorksheet worksheet, int columnIndex, TableDefinition tableInfo)
     {
         ColumnDefinition column = tableInfo.Columns[columnIndex - 1];
         var metadata = new
@@ -216,8 +211,14 @@ public sealed class ExcelGenerator
             column.IsPrimaryKey,
             column.IsIdentity,
             column.IsNullable,
-            column.IsForeignKey,
             column.IsAutoGenerated,
+            column.IsForeignKey,
+            ForeignKey = new
+            {
+                Schema = column.IsForeignKey ? column.ForeignKey.Schema : string.Empty,
+                Table = column.IsForeignKey ? column.ForeignKey.Table : string.Empty,
+                Column = column.IsForeignKey ? column.ForeignKey.Column : string.Empty,
+            }
         };
 
         string serializedMetadata = JsonSerializer.Serialize(metadata, new JsonSerializerOptions
@@ -225,8 +226,8 @@ public sealed class ExcelGenerator
             WriteIndented = true,
         });
 
-        ExcelComment colComment = worksheet.Cells[1, columnIndex].AddComment(serializedMetadata, "Owner");
-        colComment.AutoFit = true;
+        ExcelComment comment = worksheet.Cells[1, columnIndex].AddComment(serializedMetadata, "Owner");
+        comment.AutoFit = true;
     }
 
     private static void CreateExcelTable(ExcelWorksheet worksheet, TableDefinition table)

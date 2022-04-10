@@ -1,8 +1,9 @@
 ﻿using Datask.Providers;
+using Datask.Tool.ExcelData.Core.Bases;
 
 namespace Datask.Tool.ExcelData.Core;
 
-public sealed record DataHelperConfiguration
+public sealed class DataHelperConfiguration : ExecutorOptions
 {
     public string Namespace { get; set; } = null!;
 

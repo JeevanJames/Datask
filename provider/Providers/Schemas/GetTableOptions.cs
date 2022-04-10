@@ -11,9 +11,9 @@ public sealed class GetTableOptions
     private readonly Lazy<IList<Regex>> _includeTables = new(() => new List<Regex>());
     private readonly Lazy<IList<Regex>> _excludeTables = new(() => new List<Regex>());
 
-    public IList<Regex> IncludeTables => _includeTables.Value;
+    public IList<Regex> IncludeTables => _includeTables.IsValueCreated ? _includeTables.Value : Array.Empty<Regex>();
 
-    public IList<Regex> ExcludeTables => _excludeTables.Value;
+    public IList<Regex> ExcludeTables => _excludeTables.IsValueCreated ? _excludeTables.Value : Array.Empty<Regex>();
 
     public bool IncludeColumns { get; set; }
 

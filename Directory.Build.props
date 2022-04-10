@@ -39,6 +39,7 @@
     <ItemGroup>
         <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="Properties/stylecop.json" />
         <Compile Include="$(MSBuildThisFileDirectory)shared/GlobalSuppressions.cs" Link="Properties/GlobalSuppressions.cs" />
+        <Compile Include="$(MSBuildThisFileDirectory)shared/NullableAttributes.cs" Link="Properties/NullableAttributes.cs" />
     </ItemGroup>
 
     <ItemGroup>
@@ -58,7 +59,7 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <!-- <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.354">
+        <!-- <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.406">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference> -->

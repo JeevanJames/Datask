@@ -45,6 +45,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "shared", "shared", "{EE2F07FF-1CF9-4386-8FF2-144EA1F2BCF4}"
 	ProjectSection(SolutionItems) = preProject
 		shared\GlobalSuppressions.cs = shared\GlobalSuppressions.cs
+		shared\NullableAttributes.cs = shared\NullableAttributes.cs
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DbDeploy", "DbDeploy", "{3A6ADA6D-F63D-46A5-AC24-7822C9C790F2}"

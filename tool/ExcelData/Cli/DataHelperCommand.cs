@@ -17,22 +17,22 @@ public sealed class DataHelperCommand : BaseCommand
         DataHelperConfiguration? config = ParseConfiguration();
         if (config is null || config.Flavors is null || config.Flavors.Count == 0)
         {
-            AnsiConsole.MarkupLine($"The config does not contains valid value..");
+            AnsiConsole.MarkupLine("The config does not contains valid value..");
             return 0;
         }
 
         if (string.IsNullOrEmpty(config.FilePath))
             config.FilePath = Path.Combine(Directory.GetCurrentDirectory(), "TestDataHelper.cs");
 
-        DataExtensionBuilder builder = new(config);
+        DataExtensionBuilder generator = new(config);
 
-        builder.OnStatus += (_, args) =>
+        generator.OnStatus += (_, args) =>
         {
             ctx.Status(args.Message ?? string.Empty);
             ctx.Refresh();
         };
 
-        await builder.BuildDataExtensionAsync().ConfigureAwait(false);
+        await generator.ExecuteAsync().ConfigureAwait(false);
 
         AnsiConsole.MarkupLine($"The file {config.FilePath} generated successfully.");
 
