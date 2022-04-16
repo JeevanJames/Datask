@@ -1,7 +1,7 @@
-﻿namespace Datask.Tool.ExcelData;
+﻿namespace Datask.Tool.ExcelData.Excel;
 
-[Command("generate", "g")]
-[CommandHelp("Generates xlsx file with database table and column information.")]
+[Command("create", ParentType = typeof(ExcelCommand))]
+[CommandHelp("Creates an Excel file from the schema of a database.")]
 public sealed class GenerateCommand : BaseCommand
 {
     [Argument(Order = 0)]
@@ -9,7 +9,7 @@ public sealed class GenerateCommand : BaseCommand
     public string ConnectionString { get; set; } = null!;
 
     [Argument(Order = 1)]
-    [ArgumentHelp("file name", "The name of the Excel file to create.")]
+    [ArgumentHelp("file name", "The path to the Excel file to create.")]
     public FileInfo ExcelFile { get; set; } = null!;
 
     [Option("include", "i", Optional = true, MultipleOccurrences = true)]
@@ -33,8 +33,8 @@ public sealed class GenerateCommand : BaseCommand
         }
 
         ExcelGeneratorOptions options = new(ConnectionString, ExcelFile);
-        options.IncludeTables.AddRange(IncludeTables.Distinct());
-        options.ExcludeTables.AddRange(ExcludeTables.Distinct());
+        options.IncludeTables.AddRange(IncludeTables.Distinct(StringComparer.OrdinalIgnoreCase));
+        options.ExcludeTables.AddRange(ExcludeTables.Distinct(StringComparer.OrdinalIgnoreCase));
 
         ExcelGenerator generator = new(options);
         generator.OnStatus += (_, args) =>

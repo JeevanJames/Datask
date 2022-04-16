@@ -22,8 +22,6 @@
         <PackageReference Include="DotNetCore.NPOI" Version="1.2.3" />
         <PackageReference Include="EPPlus" Version="[4.5.3.3,5)" />
         <PackageReference Include="System.Linq.Async" Version="5.1.0" />
-        <PackageReference Include="System.Text.Encodings.Web" Version="6.0.0" />
-        <PackageReference Include="System.Text.Json" Version="6.0.1" />
     </ItemGroup>
 
     <ItemGroup>

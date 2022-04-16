@@ -12,9 +12,14 @@ using NPOI.XSSF.UserModel;
 
 namespace Datask.Tool.ExcelData.Core;
 
-public sealed class DataExtensionBuilder : GeneratorBase<DataHelperConfiguration, StatusEvents>
+public sealed class ExtensionMethodsGenerator : GeneratorBase<ExtensionMethodsGeneratorOptions, StatusEvents>
 {
-    public DataExtensionBuilder(DataHelperConfiguration options)
+    static ExtensionMethodsGenerator()
+    {
+        RegisterTypes();
+    }
+
+    public ExtensionMethodsGenerator(ExtensionMethodsGeneratorOptions options)
         : base(options)
     {
     }
@@ -25,11 +30,10 @@ public sealed class DataExtensionBuilder : GeneratorBase<DataHelperConfiguration
             return;
 
         string filePath = Options.FilePath;
-        RegisterTypes();
         await File.WriteAllTextAsync(filePath, await RenderTemplate("PopulateDataTemplate", Options)
             .ConfigureAwait(false));
 
-        foreach (Flavors flavor in Options.Flavors)
+        foreach (Flavor flavor in Options.Flavors)
         {
             FireStatusEvent(StatusEvents.Generate,
                 "Generating data helper for {Flavor} information.",
@@ -38,7 +42,7 @@ public sealed class DataExtensionBuilder : GeneratorBase<DataHelperConfiguration
             await File.AppendAllTextAsync(filePath, await RenderTemplate("PopulateFlavorDataTemplate", flavor.Name)
                 .ConfigureAwait(false));
 
-            await using FileStream fs = new(flavor.ExcelPath, FileMode.Open, FileAccess.Read);
+            await using FileStream fs = new(flavor.ExcelFilePath, FileMode.Open, FileAccess.Read);
             IWorkbook xssWorkbook = new XSSFWorkbook(fs);
 
             int worksheetCount = xssWorkbook.NumberOfSheets;
@@ -212,9 +216,9 @@ public sealed class DataExtensionBuilder : GeneratorBase<DataHelperConfiguration
     private static void RegisterTypes()
     {
         Template.RegisterSafeType(typeof(Type), typeof(Type).GetProperties().Select(p => p.Name).ToArray());
-        Template.RegisterSafeType(typeof(DataHelperConfiguration),
-            typeof(DataHelperConfiguration).GetProperties().Select(p => p.Name).ToArray());
-        Template.RegisterSafeType(typeof(Flavors), typeof(Flavors).GetProperties().Select(p => p.Name).ToArray());
+        Template.RegisterSafeType(typeof(ExtensionMethodsGeneratorOptions),
+            typeof(ExtensionMethodsGeneratorOptions).GetProperties().Select(p => p.Name).ToArray());
+        Template.RegisterSafeType(typeof(Flavor), typeof(Flavor).GetProperties().Select(p => p.Name).ToArray());
         Template.RegisterSafeType(typeof(TableBindingModel),
             typeof(TableDefinition).GetProperties().Select(p => p.Name).ToArray());
         Template.RegisterSafeType(typeof(ColumnBindingModel), typeof(ColumnBindingModel).GetProperties().Select(p => p.Name).ToArray());
