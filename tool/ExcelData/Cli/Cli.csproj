@@ -4,12 +4,12 @@
         <OutputType>Exe</OutputType>
         <TargetFramework>net5.0</TargetFramework>
         <RootNamespace>$(BaseNamespace).Tool.ExcelData</RootNamespace>
-        <AssemblyName>exceldata</AssemblyName>
+        <AssemblyName>datask-excel</AssemblyName>
         <DocumentationFile>Properties\$(AssemblyName).xml</DocumentationFile>
         <Description>Tool to manage database data using Excel</Description>
 
         <Configurations>Debug;Release;Debug-Tool;Release-Tool</Configurations>
-        <PackageId>dotnet-ExcelData</PackageId>
+        <PackageId>datask-excel</PackageId>
         <PackageTags>ExcelData</PackageTags>
         <Description>CLI tool to export the database table and column deatils in Excel..</Description>
         <DocumentationFile>Properties\$(AssemblyName).xml</DocumentationFile>
@@ -17,12 +17,12 @@
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-Tool|AnyCPU'">
         <PackAsTool>true</PackAsTool>
-        <ToolCommandName>exceldata</ToolCommandName>
+        <ToolCommandName>datask-excel</ToolCommandName>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-Tool|AnyCPU'">
         <PackAsTool>true</PackAsTool>
-        <ToolCommandName>exceldata</ToolCommandName>
+        <ToolCommandName>datask-excel</ToolCommandName>
     </PropertyGroup>
 
     <ItemGroup>
@@ -37,10 +37,6 @@
         <ProjectReference Include="..\..\..\provider\Providers\Providers.csproj" />
         <ProjectReference Include="..\..\..\provider\SqlServer\SqlServer.csproj" />
         <ProjectReference Include="..\Core\Core.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Excel\" />
     </ItemGroup>
 
 </Project>

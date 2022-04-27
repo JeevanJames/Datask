@@ -6,15 +6,43 @@ namespace Datask.Tool.ExcelData;
 [Command("test")]
 public sealed class TestCommand : Command
 {
+    private const string ConnectionString =
+        @"Server=(localdb)\MSSQLLocalDB;AttachDbFileName=D:\Temp\Northwnd.mdf;Database=NW;Trusted_Connection=Yes;";
+
+#pragma warning disable S1075 // URIs should not be hardcoded
+    private const string ExcelFilePath = @"D:\Temp\Northwnd.xlsx";
+#pragma warning restore S1075 // URIs should not be hardcoded
+
     public override async Task<int> HandleCommandAsync(IParseResult parseResult)
     {
-        using IProvider provider = new SqlServerProvider(
-            @"Server=(localdb)\MSSQLLocalDB;AttachDbFileName=D:\Temp\Northwnd.mdf;Database=NW;Trusted_Connection=Yes;");
-        IList<TableDefinition> tables = await provider.SchemaQuery
+        //await ListTables();
+
+        await ListExcelData();
+
+        return 0;
+    }
+
+    private static async Task ListTables()
+    {
+        using IProvider provider = new SqlServerProvider(ConnectionString);
+
+        TableDefinitionCollection tables = await provider.SchemaQuery
             .GetTables(new GetTableOptions { IncludeColumns = true, IncludeForeignKeys = true, });
+        tables.SortByForeignKeyDependencies();
 
-        Sort(tables);
+        PrintTableDefinitions(tables);
+    }
 
+    private static Task ListExcelData()
+    {
+        using DataExcelWorkbook workbook = new(ExcelFilePath);
+        IEnumerable<TableDefinition> tables = workbook.EnumerateTables();
+        PrintTableDefinitions(tables);
+        return Task.CompletedTask;
+    }
+
+    private static void PrintTableDefinitions(IEnumerable<TableDefinition> tables)
+    {
         foreach (TableDefinition table in tables)
         {
             AnsiConsole.MarkupLine($"[yellow][[{table.Schema}]].[[{table.Name}]][/]");
@@ -34,23 +62,6 @@ public sealed class TestCommand : Command
                         AnsiConsole.MarkupLine(
                             $"        [green][[FK]][/] ==> [white]{column.ForeignKey.Schema.EscapeMarkup()}.{column.ForeignKey.Table.EscapeMarkup()}.{column.ForeignKey.Column.EscapeMarkup()}[/]");
                     }
-                }
-            }
-        }
-
-        return 0;
-    }
-
-    private static void Sort(IList<TableDefinition> tables)
-    {
-        TableForeignKeyComparer comparer = new();
-        for (int i = 0; i < tables.Count - 1; i++)
-        {
-            for (int j = i + 1; j < tables.Count; j++)
-            {
-                if (comparer.Compare(tables[i], tables[j]) > 0)
-                {
-                    (tables[i], tables[j]) = (tables[j], tables[i]);
                 }
             }
         }

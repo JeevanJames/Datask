@@ -49,6 +49,15 @@ public sealed record TableDefinition : IEquatable<TableDefinition?>, IEquatable<
     {
         return $"{Schema}.{Name}".GetHashCode();
     }
+
+    public static bool TryParse(string str, out TableDefinition table)
+    {
+        if (str is null)
+            throw new ArgumentNullException(nameof(str));
+        string[] parts = str.Split(new[] { '.' }, 2, StringSplitOptions.None);
+        table = new TableDefinition(parts[1], parts[0], $"{parts[0]}.{parts[1]}");
+        return true;
+    }
 }
 
 public sealed class TableDefinitionCollection : Collection<TableDefinition>

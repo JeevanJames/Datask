@@ -1,14 +1,15 @@
 ﻿        private static async Task Populate_{{model.table.schema}}{{model.table.name}}_Data(SqlConnection connection)
         {
+            const string insertCommand =
+                "INSERT INTO [{{model.table.schema}}].[{{model.table.name}}] ({% for tableColumn in model.table.columns -%} {{tableColumn.name}}{% if forloop.last == false -%}, {% endif -%}{% endfor -%})" +
+                "VALUES ({% for tableColumn in model.table.columns -%} @{{tableColumn.name}}{% if forloop.last == false -%}, {% endif -%}{% endfor -%});";
+
+{%          if model.ic -%}
+            await TestDataHelper.SetIdentity(connection, "[{{model.table.schema}}].[{{model.table.name}}]", true).ConfigureAwait(false);
+{%          endif -%}
+
             try
             {
-{%          if model.ic -%}
-                await SetIdentityOn(connection, "[{{model.table.schema}}].[{{model.table.name}}]").ConfigureAwait(false);
-{%          endif -%}
-                const string insertCommand =
-                    "INSERT INTO [{{model.table.schema}}].[{{model.table.name}}] ({% for tableColumn in model.table.columns -%} {{tableColumn.name}}{% if forloop.last == false -%}, {% endif -%}{% endfor -%})" +
-                    "VALUES ({% for tableColumn in model.table.columns -%} @{{tableColumn.name}}{% if forloop.last == false -%}, {% endif -%}{% endfor -%});";
-
                 await using DbCommand command = new SqlCommand(insertCommand, connection);
 {%      for tableColumn in model.table.columns -%}
                 command.Parameters.Add(new SqlParameter { DbType = {{tableColumn.database_type}}, ParameterName = "{{tableColumn.name}}", Size = {% if tableColumn.c_sharp_type == "DateTimeOffset" %}1 {% elsif tableColumn.c_sharp_type == "string" or tableColumn.c_sharp_type == "Byte[]" or  tableColumn.c_sharp_type == "Guid" or tableColumn.c_sharp_type contains "Date" or tableColumn.c_sharp_type contains "Time" %}{{tableColumn.max_length}} {% else -%}sizeof({{tableColumn.c_sharp_type}} ){% endif -%}});
@@ -21,7 +22,7 @@
             finally
             {
 {%          if model.ic -%}
-                await SetIdentityOff(connection, "[{{model.table.schema}}].[{{model.table.name}}]").ConfigureAwait(false);
+                await TestDataHelper.SetIdentity(connection, "[{{model.table.schema}}].[{{model.table.name}}]", false).ConfigureAwait(false);
 {%          endif -%}
             }
         }

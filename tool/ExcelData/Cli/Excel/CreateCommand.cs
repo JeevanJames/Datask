@@ -1,16 +1,16 @@
 ﻿namespace Datask.Tool.ExcelData.Excel;
 
 [Command("create", ParentType = typeof(ExcelCommand))]
-[CommandHelp("Creates an Excel file from the schema of a database.")]
-public sealed class GenerateCommand : BaseCommand
+[CommandHelp("Creates an Excel workbook from the schema of a database.")]
+public sealed class CreateCommand : BaseCommand
 {
     [Argument(Order = 0)]
-    [ArgumentHelp("connection string", "The connection string to the database to create the Excel file from.")]
-    public string ConnectionString { get; set; } = null!;
+    [ArgumentHelp("excel file", "The path to the Excel workbook to create.")]
+    public FileInfo ExcelFile { get; set; } = null!;
 
     [Argument(Order = 1)]
-    [ArgumentHelp("file name", "The path to the Excel file to create.")]
-    public FileInfo ExcelFile { get; set; } = null!;
+    [ArgumentHelp("connection string", "The connection string to the database to create the Excel file from.")]
+    public string ConnectionString { get; set; } = null!;
 
     [Option("include", "i", Optional = true, MultipleOccurrences = true)]
     [OptionHelp("Tables to include in generation; should match the format <schema>.<table>. Use regular express syntax.")]
@@ -20,13 +20,20 @@ public sealed class GenerateCommand : BaseCommand
     [OptionHelp("Tables to exclude in generation; should match the format <schema>.<table>. Use regular express syntax.")]
     public IList<string> ExcludeTables { get; } = new List<string>();
 
+    [Flag("populate")]
+    [FlagHelp("Populates the Excel workbook with data from the database.")]
+    public bool Populate { get; set; }
+
     [Flag("force")]
     [FlagHelp("Overwrites the output file, if it already exists.")]
     public bool Force { get; set; }
 
     protected override async Task<int> ExecuteAsync(StatusContext ctx, IParseResult parseResult)
     {
-        if (File.Exists(ExcelFile.FullName))
+        if (Populate)
+            throw new InvalidOperationException("The populate option is not currently available.");
+
+        if (ExcelFile.Exists)
         {
             ctx.Status($"File '{ExcelFile}' already exists. Overwriting.");
             ExcelFile.Delete();

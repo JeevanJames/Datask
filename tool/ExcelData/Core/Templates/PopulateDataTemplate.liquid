@@ -13,32 +13,25 @@ using Microsoft.Data.SqlClient;
 
 namespace {{model.namespace}}
 {
+    {%- if model.flavors.size > 1 -%}
     public enum DataFlavors
     {
-{% for flavor in model.flavors -%}
+        {%- for flavor in model.flavors -%}
         {{flavor.name}},
-{% endfor -%}
+        {%- endfor -%}
     }
 
+    {%- endif -%}
     public partial class TestDataHelper
     {
-        public async Task PopulateData(string connectionString, params DataFlavors[] flavors)
+        public async Task PopulateDataAsync(SqlConnection connection{%- if model.flavors.size > 1 -%}, params DataFlavors[] flavors{%- endif -%})
         {
-            if (connectionString is null)
-                throw new ArgumentNullException(nameof(connectionString));
-            if (connectionString.Trim().Length == 0)
-                throw new ArgumentException("Connection string cannot be empty or whitespace.", nameof(connectionString));
-
-            if (flavors is null)
-                throw new ArgumentNullException(nameof(flavors));
-            if (flavors.Length == 0)
-                throw new ArgumentException("Specify at least one data flavor to use.", nameof(flavors));
-
-            await using SqlConnection connection = new(connectionString);
-            await connection.OpenAsync().ConfigureAwait(false);
+            if (connection is null)
+                throw new ArgumentNullException(nameof(connection));
 
             BeforeInsertData(connection);
 
+            {%- if model.flavors.size > 1 -%}
             foreach (DataFlavors flavor in flavors)
             {
                 switch (flavor)
@@ -50,14 +43,62 @@ namespace {{model.namespace}}
 {% endfor -%}
                 }
             }
+            {%- else -%}
+            DefaultData.Populate(connection).ConfigureAwait(false);
+            {%- endif -%}
+
+            AfterInsertData(connection);
+        }
+
+        public async Task PopulateDataAsync(string connectionString{%- if model.flavors.size > 1 -%}, params DataFlavors[] flavors{%- endif -%})
+        {
+            if (connectionString is null)
+                throw new ArgumentNullException(nameof(connectionString));
+            if (connectionString.Trim().Length == 0)
+                throw new ArgumentException("Connection string cannot be empty or whitespace.", nameof(connectionString));
+
+            {%- if model.flavors.size > 1 -%}
+            if (flavors is null)
+                throw new ArgumentNullException(nameof(flavors));
+            if (flavors.Length == 0)
+                throw new ArgumentException("Specify at least one data flavor to use.", nameof(flavors));
+
+            {%- endif -%}
+            await using SqlConnection connection = new(connectionString);
+            await connection.OpenAsync().ConfigureAwait(false);
+
+            BeforeInsertData(connection);
+
+            {%- if model.flavors.size > 1 -%}
+            foreach (DataFlavors flavor in flavors)
+            {
+                switch (flavor)
+                {
+{% for flavor in model.flavors -%}
+                    case DataFlavors.{{flavor.name}}:
+                        await {{flavor.name}}Data.Populate(connection).ConfigureAwait(false);
+                        break;
+{% endfor -%}
+                }
+            }
+            {%- else -%}
+            DefaultData.Populate(connection).ConfigureAwait(false);
+            {%- endif -%}
 
             AfterInsertData(connection);
 
             await connection.CloseAsync().ConfigureAwait(false);
         }
 
-        partial void BeforeInsertData(SqlConnection sqlConnection);
+        partial void BeforeInsertData(SqlConnection connection);
 
-        partial void AfterInsertData(SqlConnection sqlConnection);
+        partial void AfterInsertData(SqlConnection connection);
+
+        internal static async Task SetIdentity(SqlConnection connection, string tableName, bool enabled)
+        {
+            string identityState = enabled ? "ON" : "OFF";
+            await using SqlCommand command = new($"SET IDENTITY_INSERT {tableName} {identityState}", connection);
+            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+        }
     }
 
