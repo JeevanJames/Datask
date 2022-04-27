@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Text.Json;
 
+using Datask.Common.Utilities;
 using Datask.Providers.Schemas;
 using Datask.Tool.ExcelData.Core.Bases;
 
@@ -30,6 +31,7 @@ public sealed class ExtensionMethodsGenerator : GeneratorBase<ExtensionMethodsGe
             return;
 
         string filePath = Options.FilePath;
+        FileHelpers.EnsureDirectoryExists(filePath);
 
         await using FileStream fileStream = File.Create(filePath);
         await using StreamWriter writer = new(fileStream);

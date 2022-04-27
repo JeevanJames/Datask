@@ -27,6 +27,8 @@ public sealed class ExcelGenerator : Executor<ExcelGeneratorOptions, StatusEvent
 
     public override async Task ExecuteAsync()
     {
+        FileHelpers.EnsureDirectoryExists(_options.ExcelFilePath.FullName);
+
         using ExcelPackage package = new(_options.ExcelFilePath);
         await FillExcelData(package.Workbook).ConfigureAwait(false);
         package.Save();
