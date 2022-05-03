@@ -28,4 +28,9 @@
         <PackageReference Include="Spectre.Console" Version="0.43.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\provider\SqlServer\SqlServer.csproj" />
+      <ProjectReference Include="..\Core\Core.csproj" />
+    </ItemGroup>
+
 </Project>

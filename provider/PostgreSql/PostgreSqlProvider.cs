@@ -9,7 +9,8 @@ namespace Datask.Providers.PostgreSql;
 public sealed class PostgreSqlProvider : ProviderBase<NpgsqlConnection,
     PostgreSqlDbManagementProvider,
     PostgreSqlSchemaQueryProvider,
-    PostgreSqlScriptGeneratorProvider>
+    PostgreSqlScriptGeneratorProvider,
+    PostgreSqlStandardsProvider>
 {
     public PostgreSqlProvider(string connectionString, string? databaseName = null)
         : base(connectionString, cs => new NpgsqlConnection(cs), ValidateConnectionString, databaseName)

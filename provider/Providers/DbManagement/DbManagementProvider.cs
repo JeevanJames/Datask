@@ -41,5 +41,15 @@ public abstract class DbManagementProvider<TConnection> : SubProviderBase<TConne
         throw new NotImplementedException();
     }
 
-    public abstract Task ExecuteScriptAsync(IAsyncEnumerable<string> scripts);
+    public abstract Task ExecuteScriptsAsync(IAsyncEnumerable<string> scripts);
+
+    public virtual Task ExecuteScriptAsync(string script)
+    {
+        return Task.FromResult(script);
+    }
+
+    protected virtual void ExecuteScript(string script)
+    {
+        throw new NotImplementedException();
+    }
 }

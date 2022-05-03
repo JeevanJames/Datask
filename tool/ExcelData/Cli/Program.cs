@@ -1,8 +1,3 @@
-using ConsoleFx.CmdLine;
-using ConsoleFx.CmdLine.Help;
-
-using Spectre.Console;
-
 namespace Datask.Tool.ExcelData;
 
 public sealed class Program : ConsoleProgram

@@ -2,6 +2,7 @@
 
 namespace Datask.Providers;
 
+//TODO: Make subproviders disposable
 public abstract class SubProviderBase<TConnection>
     where TConnection : IDbConnection
 {

@@ -5,6 +5,7 @@
 using Datask.Providers.DbManagement;
 using Datask.Providers.Schemas;
 using Datask.Providers.Scripts;
+using Datask.Providers.Standards;
 
 namespace Datask.Providers;
 
@@ -15,4 +16,6 @@ public interface IProvider : IDisposable
     ISchemaQueryProvider SchemaQuery { get; }
 
     IScriptGeneratorProvider ScriptGenerator { get; }
+
+    IStandardsProvider Standards { get; }
 }

@@ -9,7 +9,8 @@ namespace Datask.Providers.SqlServer;
 public sealed class SqlServerProvider : ProviderBase<SqlConnection,
     SqlServerDbManagementProvider,
     SqlServerSchemaQueryProvider,
-    SqlServerScriptGeneratorProvider>
+    SqlServerScriptGeneratorProvider,
+    SqlServerStandardsProvider>
 {
     public SqlServerProvider(string connectionString, string? databaseName = null)
         : base(connectionString, cs => new SqlConnection(cs), ValidateConnectionString, databaseName)

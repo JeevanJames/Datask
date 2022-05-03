@@ -1,11 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
+        <TargetFramework>netstandard2.1</TargetFramework>
         <RootNamespace>$(BaseNamespace).Tool.DbDeploy.Core</RootNamespace>
         <AssemblyName>$(RootNamespace)</AssemblyName>
         <DocumentationFile>Properties\$(AssemblyName).xml</DocumentationFile>
         <Description>Datask DB deployment library.</Description>
     </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\provider\Providers\Providers.csproj" />
+    </ItemGroup>
 
 </Project>

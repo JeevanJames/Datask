@@ -1,6 +1,11 @@
 ﻿using ConsoleFx.CmdLine;
 using ConsoleFx.CmdLine.Help;
 
+using Datask.Providers.SqlServer;
+using Datask.Tool.DbDeploy.Core;
+
+using Spectre.Console;
+
 namespace Datask.Tool.DbDeploy.Drop;
 
 [Command("drop")]
@@ -11,12 +16,17 @@ public sealed class DropCommand : Command
     [ArgumentHelp("connection string", "The server connection string (without database name) or the full connection string (without database name).")]
     public string ConnectionString { get; set; } = null!;
 
-    [Option("database")]
+    [Option("database", Optional = true)]
     [OptionHelp("The name of the database, if a server connection string is specified. Optional if the full connection string is specified.")]
     public string? DatabaseName { get; set; }
 
-    public override Task<int> HandleCommandAsync(IParseResult parseResult)
+    public override async Task<int> HandleCommandAsync(IParseResult parseResult)
     {
-        return Task.FromResult(0);
+        DbDeployer<SqlServerProvider> deployer = new(ConnectionString, DatabaseName);
+        await deployer.DropAsync().ConfigureAwait(false);
+
+        AnsiConsole.MarkupLine("Successfully dropped the database.");
+
+        return 0;
     }
 }

@@ -3,6 +3,7 @@
 using Datask.Providers.DbManagement;
 using Datask.Providers.Schemas;
 using Datask.Providers.Scripts;
+using Datask.Providers.Standards;
 
 namespace Datask.Providers;
 
@@ -19,11 +20,15 @@ namespace Datask.Providers;
 /// <typeparam name="TScriptGenerator">
 ///     The type of the script generator provider (<see cref="IScriptGeneratorProvider"/>).
 /// </typeparam>
-public abstract class ProviderBase<TConnection, TDbManagement, TSchemaQuery, TScriptGenerator> : IProvider
+/// <typeparam name="TStandards">
+///     The type of the standards provider (<see cref="IStandardsProvider"/>).
+/// </typeparam>
+public abstract class ProviderBase<TConnection, TDbManagement, TSchemaQuery, TScriptGenerator, TStandards> : IProvider
     where TConnection: notnull, IDbConnection
     where TDbManagement: DbManagementProvider<TConnection>, IDbManagementProvider
     where TSchemaQuery : SchemaQueryProvider<TConnection>, ISchemaQueryProvider
     where TScriptGenerator : ScriptGeneratorProvider<TConnection>, IScriptGeneratorProvider
+    where TStandards : StandardsProvider<TConnection>, IStandardsProvider
 {
     private readonly TConnection _connection;
     private bool _disposedValue;
@@ -31,6 +36,7 @@ public abstract class ProviderBase<TConnection, TDbManagement, TSchemaQuery, TSc
     private readonly Lazy<TDbManagement> _dbManagement;
     private readonly Lazy<TSchemaQuery> _schemaQueryProvider;
     private readonly Lazy<TScriptGenerator> _scriptGeneratorProvider;
+    private readonly Lazy<TStandards> _standardsProvider;
 
     protected ProviderBase(string connectionString, Func<string, TConnection> connectionFactory,
         Func<string, string?, string> connectionStringValidator,
@@ -49,6 +55,7 @@ public abstract class ProviderBase<TConnection, TDbManagement, TSchemaQuery, TSc
         _dbManagement = new Lazy<TDbManagement>(InstantiateSubProvider<TDbManagement>);
         _schemaQueryProvider = new Lazy<TSchemaQuery>(InstantiateSubProvider<TSchemaQuery>);
         _scriptGeneratorProvider = new Lazy<TScriptGenerator>(InstantiateSubProvider<TScriptGenerator>);
+        _standardsProvider = new Lazy<TStandards>(InstantiateSubProvider<TStandards>);
     }
 
     public IDbManagementProvider DbManagement => _dbManagement.Value;
@@ -57,12 +64,26 @@ public abstract class ProviderBase<TConnection, TDbManagement, TSchemaQuery, TSc
 
     public IScriptGeneratorProvider ScriptGenerator => _scriptGeneratorProvider.Value;
 
+    public IStandardsProvider Standards => _standardsProvider.Value;
+
     protected virtual void Dispose(bool disposing)
     {
         if (!_disposedValue)
         {
             if (disposing)
                 _connection.Dispose();
+
+            if (DbManagement is IDisposable disposableDbManagement)
+                disposableDbManagement.Dispose();
+
+            if (SchemaQuery is IDisposable disposableSchemaQuery)
+                disposableSchemaQuery.Dispose();
+
+            if (ScriptGenerator is IDisposable disposableScriptGenerator)
+                disposableScriptGenerator.Dispose();
+
+            if (Standards is IDisposable disposableStandards)
+                disposableStandards.Dispose();
 
             _disposedValue = true;
         }

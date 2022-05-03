@@ -11,7 +11,7 @@ namespace Datask.Providers.PostgreSql
         {
         }
 
-        public override Task ExecuteScriptAsync(IAsyncEnumerable<string> scripts)
+        public override Task ExecuteScriptsAsync(IAsyncEnumerable<string> scripts)
         {
             throw new NotImplementedException();
         }

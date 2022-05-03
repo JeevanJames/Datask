@@ -10,49 +10,63 @@ using Microsoft.SqlServer.Management.Smo;
 
 namespace Datask.Providers.SqlServer;
 
-public sealed class SqlServerDbManagementProvider : DbManagementProvider<SqlConnection>
+public sealed class SqlServerDbManagementProvider : DbManagementProvider<SqlConnection>, IDisposable
 {
+    private readonly SqlConnection _serverConnection;
+    private readonly Server _server;
+    private readonly string _databaseName;
+
     public SqlServerDbManagementProvider(SqlConnection connection)
         : base(connection)
     {
+        SqlConnectionStringBuilder builder = new(connection.ConnectionString);
+
+        _databaseName = builder.InitialCatalog;
+
+        builder.InitialCatalog = string.Empty;
+        _serverConnection = new SqlConnection(builder.ConnectionString);
+
+        _server = new Server(new ServerConnection(_serverConnection));
+    }
+
+    public void Dispose()
+    {
+        _serverConnection.Dispose();
     }
 
     protected override bool TryCreateDatabase()
     {
-        (Server server, string databaseName) = GetServerAndDatabaseName();
-
-        Database database = server.Databases[databaseName];
+        Database database = _server.Databases[_databaseName];
         if (database is not null)
             return true;
 
-        database = new Database(server, databaseName);
+        database = new Database(_server, _databaseName);
         database.Create();
         return true;
     }
 
     protected override void DeleteDatabase()
     {
-        (Server server, string databaseName) = GetServerAndDatabaseName();
-
-        Database database = server.Databases[databaseName];
+        Database database = _server.Databases[_databaseName];
         if (database is not null)
-            server.KillDatabase(databaseName);
+            _server.KillDatabase(_databaseName);
     }
 
     protected override bool DatabaseExists()
     {
-        (Server server, string databaseName) = GetServerAndDatabaseName();
-        return server.Databases[databaseName] is not null;
+        return _server.Databases[_databaseName] is not null;
     }
 
-    public override Task ExecuteScriptAsync(IAsyncEnumerable<string> scripts)
+    public override async Task ExecuteScriptsAsync(IAsyncEnumerable<string> scripts)
     {
-        throw new NotImplementedException();
+        Database database = _server.Databases[_databaseName];
+        await foreach (string script in scripts)
+            database.ExecuteNonQuery(script);
     }
 
-    private (Server, string) GetServerAndDatabaseName()
+    protected override void ExecuteScript(string script)
     {
-        return (new(new ServerConnection(Connection)),
-            new SqlConnectionStringBuilder(Connection.ConnectionString).InitialCatalog);
+        Database database = _server.Databases[_databaseName];
+        database.ExecuteNonQuery(script);
     }
 }

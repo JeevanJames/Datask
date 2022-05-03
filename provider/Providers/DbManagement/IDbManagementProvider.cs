@@ -8,5 +8,7 @@ public interface IDbManagementProvider
 
     Task<bool> DatabaseExistsAsync();
 
-    Task ExecuteScriptAsync(IAsyncEnumerable<string> scripts);
+    Task ExecuteScriptsAsync(IAsyncEnumerable<string> scripts);
+
+    Task ExecuteScriptAsync(string script);
 }
