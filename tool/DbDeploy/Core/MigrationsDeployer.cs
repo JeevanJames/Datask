@@ -18,9 +18,7 @@ internal sealed class MigrationsDeployer
         await DropAndCreateDatabase().ConfigureAwait(false);
 
         await foreach (ScriptFile scriptFile in EnumerateScripts())
-        {
             await _provider.DbManagement.ExecuteScriptAsync(scriptFile.Content);
-        }
     }
 
     private async Task DropAndCreateDatabase()

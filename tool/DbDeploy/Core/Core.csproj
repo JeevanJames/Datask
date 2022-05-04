@@ -9,6 +9,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Collections.NET" Version="1.7.0" />
+    </ItemGroup>
+
+    <ItemGroup>
       <ProjectReference Include="..\..\..\provider\Providers\Providers.csproj" />
     </ItemGroup>
 

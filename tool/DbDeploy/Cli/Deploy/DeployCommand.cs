@@ -5,6 +5,8 @@ using ConsoleFx.CmdLine.Validators;
 using Datask.Providers.SqlServer;
 using Datask.Tool.DbDeploy.Core;
 
+using Spectre.Console;
+
 namespace Datask.Tool.DbDeploy.Deploy;
 
 [Command("deploy")]
@@ -23,10 +25,14 @@ public sealed class DeployCommand : Command
     [OptionHelp("How to deploy the database. Migrate only runs the pending migration scripts. Full will drop the database if it exists and run all the deployment scripts. If the database doesn't exist, then specifying Migrate will be the same as Full.")]
     public DeployMode Mode { get; set; } = DeployMode.Migrate;
 
-    [Option("directory", Optional = true)]
+    [Option("pre-migration-scripts-dir", Optional = true, MultipleOccurrences = true)]
+    [OptionHelp("One or more script directories to execute before running the migrations.")]
+    public IList<DirectoryInfo> PreMigrationScriptDirs { get; set; } = null!;
+
+    [Option("directory", Optional = true, MultipleOccurrences = true)]
     [OptionHelp("The directory or base directory that contains the deployment scripts. Default: the current directory.")]
     [DirectoryValidator(shouldExist: true)]
-    public DirectoryInfo ScriptsDir { get; set; } = null!;
+    public IList<DirectoryInfo> MigrationScriptsDirs { get; set; } = null!;
 
     [Option("migration-table", Optional = true)]
     [OptionHelp("The name of the migration history table. Default: __DataskMigrationHistory.")]
@@ -45,9 +51,28 @@ public sealed class DeployCommand : Command
             Mode = Mode,
             HistoryTableSchema = MigrationTableSchema,
         };
+
         if (MigrationTableName is not null)
             options.HistoryTableName = MigrationTableName;
-        
+
+        if (PreMigrationScriptDirs.Count > 0)
+        {
+            options.PreMigrationScriptDirs.AddRange(
+                PreMigrationScriptDirs.Select(s => new ScriptsDirectory(s.FullName, recursive: false)));
+        }
+
+        if (MigrationScriptsDirs.Count > 0)
+        {
+            options.MigrationScriptDirs.AddRange(
+                MigrationScriptsDirs.Select(di => (MigrationScriptsDirectory)di.FullName));
+        }
+
+        foreach (DirectoryInfo dir in PreMigrationScriptDirs)
+            AnsiConsole.MarkupLine($"Pre-migration script dir: {dir}");
+
+        foreach (DirectoryInfo dir in MigrationScriptsDirs)
+            AnsiConsole.MarkupLine($"Migration script dir: {dir}");
+
         await deployer.DeployMigrationsAsync(options).ConfigureAwait(false);
 
         return 0;
