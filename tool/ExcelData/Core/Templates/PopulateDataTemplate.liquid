@@ -44,7 +44,7 @@ namespace {{model.namespace}}
                 }
             }
             {%- else -%}
-            DefaultData.Populate(connection).ConfigureAwait(false);
+            await DefaultData.Populate(connection).ConfigureAwait(false);
             {%- endif -%}
 
             AfterInsertData(connection);
@@ -82,7 +82,7 @@ namespace {{model.namespace}}
                 }
             }
             {%- else -%}
-            DefaultData.Populate(connection).ConfigureAwait(false);
+            await DefaultData.Populate(connection).ConfigureAwait(false);
             {%- endif -%}
 
             AfterInsertData(connection);

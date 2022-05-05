@@ -1,6 +1,6 @@
 ﻿        internal static async Task Populate(SqlConnection connection)
         {
 {% for table in model -%}
-            await Populate_{{table}}_Data(connection).ConfigureAwait(false);
+            await Populate_{{table.schema}}_{{table.name}}_Data(connection).ConfigureAwait(false);
 {% endfor -%}
         }

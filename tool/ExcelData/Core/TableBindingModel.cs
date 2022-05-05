@@ -26,5 +26,7 @@ namespace Datask.Tool.ExcelData.Core
         public string CSharpType { get; set; } = null!;
 
         public string NativeType { get; set; } = null!;
+
+        public int ParameterSize { get; set; }
     }
 }

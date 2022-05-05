@@ -1,33 +1,38 @@
-﻿        private static async Task Populate_{{model.table.schema}}{{model.table.name}}_Data(SqlConnection connection)
+﻿        private static async Task Populate_{{model.table.schema}}_{{model.table.name}}_Data(SqlConnection connection)
         {
             const string insertCommand =
                 "INSERT INTO [{{model.table.schema}}].[{{model.table.name}}] ({% for tableColumn in model.table.columns -%} {{tableColumn.name}}{% if forloop.last == false -%}, {% endif -%}{% endfor -%})" +
                 "VALUES ({% for tableColumn in model.table.columns -%} @{{tableColumn.name}}{% if forloop.last == false -%}, {% endif -%}{% endfor -%});";
 
-{%          if model.ic -%}
-            await TestDataHelper.SetIdentity(connection, "[{{model.table.schema}}].[{{model.table.name}}]", true).ConfigureAwait(false);
+{%          if model.has_identity_column -%}
+{%              assign indentation = "                " -%}
+{%          else -%}
+{%              assign indentation = "            " -%}
 {%          endif -%}
+{%          if model.has_identity_column -%}
+            await TestDataHelper.SetIdentity(connection, "[{{model.table.schema}}].[{{model.table.name}}]", true).ConfigureAwait(false);
 
             try
             {
-                await using DbCommand command = new SqlCommand(insertCommand, connection);
+{%          endif -%}
+{{indentation}}await using DbCommand command = new SqlCommand(insertCommand, connection);
 {%      for tableColumn in model.table.columns -%}
-                command.Parameters.Add(new SqlParameter { DbType = {{tableColumn.database_type}}, ParameterName = "{{tableColumn.name}}", Size = {% if tableColumn.c_sharp_type == "DateTimeOffset" %}1 {% elsif tableColumn.c_sharp_type == "string" or tableColumn.c_sharp_type == "Byte[]" or  tableColumn.c_sharp_type == "Guid" or tableColumn.c_sharp_type contains "Date" or tableColumn.c_sharp_type contains "Time" %}{{tableColumn.max_length}} {% else -%}sizeof({{tableColumn.c_sharp_type}} ){% endif -%}});
+{{indentation}}command.Parameters.Add(new SqlParameter { DbType = {{tableColumn.database_type}}, ParameterName = "{{tableColumn.name}}", Size = {{tableColumn.parameter_size}} });
 {%      endfor -%}
 
-{%      for tableRows in model.dr -%}
-                await command.Insert_{{model.table.schema}}{{model.table.name}}_Row({% for rows in tableRows -%}{% assign row_index = forloop:index0 -%}{% if model.table.columns[row_index].database_type contains "String" or model.table.columns[row_index].database_type contains "Xml" -%}{% if rows == "NULL" or rows == "null" %}null {% else %}"{{rows | replace: '\"', '\"' | replace: '\n', '\n'}}"{% endif %}{% else -%}{% if rows == "NULL" or rows == "null" %}null{% else %}{{rows}}{% endif %} {% endif -%}{% if forloop.last == false -%}, {% endif -%}{% endfor -%}).ConfigureAwait(false);
+{%      for fr in model.fullRows -%}
+{{indentation}}await command.Insert_{{model.table.schema}}_{{model.table.name}}_Row({{fr}}).ConfigureAwait(false);
 {%      endfor -%}
+{%          if model.has_identity_column -%}
             }
             finally
             {
-{%          if model.ic -%}
                 await TestDataHelper.SetIdentity(connection, "[{{model.table.schema}}].[{{model.table.name}}]", false).ConfigureAwait(false);
-{%          endif -%}
             }
+{%          endif -%}
         }
 
-        private static async Task Insert_{{model.table.schema}}{{model.table.name}}_Row(this DbCommand command, {% for tableColumn in model.table.columns -%}{{tableColumn.c_sharp_type}}{% if tableColumn.is_nullable %}?{% endif %} {{tableColumn.name | remove: "-" | remove: "_" | remove: "."}}{% if forloop.last == false -%}, {% endif -%}{% endfor -%})
+        private static async Task Insert_{{model.table.schema}}_{{model.table.name}}_Row(this DbCommand command, {% for tableColumn in model.table.columns -%}{{tableColumn.c_sharp_type}}{% if tableColumn.is_nullable %}?{% endif %} {{tableColumn.name | remove: "-" | remove: "_" | remove: "."}}{% if forloop.last == false -%}, {% endif -%}{% endfor -%})
         {
 {% for tableColumn in model.table.columns -%}
 {%      assign colindex = forloop:index0 -%}
@@ -35,6 +40,7 @@
 {% endfor -%}
 
             command.Prepare();
+
             await command.ExecuteNonQueryAsync().ConfigureAwait(false);
         }
 
