@@ -1,4 +1,11 @@
-﻿namespace Datask.Tool.ExcelData.Generation;
+﻿// Copyright (c) 2021 Jeevan James
+// This file is licensed to you under the MIT License.
+// See the LICENSE file in the project root for more information.
+
+using Datask.Tool.ExcelData.Core.Generators;
+using Datask.Tool.ExcelData.Core.Generators.CSharpHelpers;
+
+namespace Datask.Tool.ExcelData.Generation;
 
 [Command("extensions", "e", ParentType = typeof(GenerateCommand))]
 [CommandHelp("Generates extension methods.")]
@@ -20,9 +27,9 @@ public sealed class ExtensionMethodsCommand : BaseCommand
             string[] parts = f.Split('=', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             return new Flavor(parts[0], parts[1]);
         });
-        ExtensionMethodsGeneratorOptions options = new(Namespace, FilePath, flavors.ToArray());
+        CSharpHelperGeneratorOptions options = new(Namespace, FilePath, flavors.ToArray());
 
-        ExtensionMethodsGenerator generator = new(options);
+        CSharpHelperGenerator generator = new(options);
         generator.OnStatus += (_, args) =>
         {
             ctx.Status(args.Message ?? string.Empty);

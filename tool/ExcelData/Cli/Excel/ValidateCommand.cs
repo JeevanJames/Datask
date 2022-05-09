@@ -1,4 +1,8 @@
-﻿namespace Datask.Tool.ExcelData.Excel;
+﻿// Copyright (c) 2021 Jeevan James
+// This file is licensed to you under the MIT License.
+// See the LICENSE file in the project root for more information.
+
+namespace Datask.Tool.ExcelData.Excel;
 
 [Command("validate", ParentType = typeof(ExcelCommand))]
 [CommandHelp("Validates an Excel workbook against a database")]

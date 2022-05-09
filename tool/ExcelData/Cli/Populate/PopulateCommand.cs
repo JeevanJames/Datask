@@ -1,4 +1,8 @@
-﻿namespace Datask.Tool.ExcelData.Populate;
+﻿// Copyright (c) 2021 Jeevan James
+// This file is licensed to you under the MIT License.
+// See the LICENSE file in the project root for more information.
+
+namespace Datask.Tool.ExcelData.Populate;
 
 [Command("populate")]
 [CommandHelp("Populates an empty database with data from an Excel workbook.", Order = 3)]

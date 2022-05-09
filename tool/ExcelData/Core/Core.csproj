@@ -11,10 +11,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="Templates\PopulateDataTemplate.liquid" />
-        <EmbeddedResource Include="Templates\PopulateConsolidatedDataTemplate.liquid" />
-        <EmbeddedResource Include="Templates\PopulateFlavorDataTemplate.liquid" />
-        <EmbeddedResource Include="Templates\PopulateTableDataTemplate.liquid" />
+        <EmbeddedResource Include="Generators\CSharpHelpers\Templates\PopulateDataTemplate.liquid" />
+        <EmbeddedResource Include="Generators\CSharpHelpers\Templates\PopulateConsolidatedDataTemplate.liquid" />
+        <EmbeddedResource Include="Generators\CSharpHelpers\Templates\PopulateFlavorDataTemplate.liquid" />
+        <EmbeddedResource Include="Generators\CSharpHelpers\Templates\PopulateTableDataTemplate.liquid" />
     </ItemGroup>
 
     <ItemGroup>
