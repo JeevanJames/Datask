@@ -6,20 +6,19 @@ using Datask.Common.Utilities;
 using Datask.Providers;
 using Datask.Providers.Schemas;
 using Datask.Providers.SqlServer;
-using Datask.Tool.ExcelData.Core.Bases;
 
 using OfficeOpenXml;
 using OfficeOpenXml.DataValidation.Contracts;
 using OfficeOpenXml.Style;
 using OfficeOpenXml.Table;
 
-namespace Datask.Tool.ExcelData.Core;
+namespace Datask.Tool.ExcelData.Core.Excel.Creator;
 
-public sealed class ExcelGenerator : Executor<ExcelGeneratorOptions, StatusEvents>
+public sealed class ExcelGenerator : Executor<ExcelCreatorOptions, StatusEvents>
 {
-    private readonly ExcelGeneratorOptions _options;
+    private readonly ExcelCreatorOptions _options;
 
-    public ExcelGenerator(ExcelGeneratorOptions options)
+    public ExcelGenerator(ExcelCreatorOptions options)
         : base(options)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));

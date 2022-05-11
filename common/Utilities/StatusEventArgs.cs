@@ -3,38 +3,6 @@ using System.Text.RegularExpressions;
 
 namespace Datask.Common.Utilities;
 
-public static class EventArgsExtensions
-{
-    public static void FireStatusEvent<TType>(this object caller,
-        EventHandler<StatusEventArgs<TType>>? handler,
-        TType statusType,
-        object? metadata = null,
-        string? message = null)
-        where TType : Enum
-    {
-        EventHandler<StatusEventArgs<TType>>? handlerCopy = handler;
-        if (handlerCopy is not null)
-        {
-            var args = new StatusEventArgs<TType>(statusType, message, metadata);
-            handlerCopy(caller, args);
-        }
-    }
-
-    public static void Fire<TType>(this EventHandler<StatusEventArgs<TType>>? handler,
-        TType statusType,
-        object? metadata = null,
-        string? message = null)
-        where TType : Enum
-    {
-        EventHandler<StatusEventArgs<TType>>? handlerCopy = handler;
-        if (handlerCopy is not null)
-        {
-            var args = new StatusEventArgs<TType>(statusType, message, metadata);
-            handlerCopy(null, args);
-        }
-    }
-}
-
 public sealed class StatusEventArgs<TType> : EventArgs
     where TType : Enum
 {

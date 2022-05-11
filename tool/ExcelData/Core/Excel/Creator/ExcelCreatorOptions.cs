@@ -1,10 +1,8 @@
-﻿using Datask.Tool.ExcelData.Core.Bases;
+﻿namespace Datask.Tool.ExcelData.Core.Excel.Creator;
 
-namespace Datask.Tool.ExcelData.Core;
-
-public sealed class ExcelGeneratorOptions : ExecutorOptions
+public sealed class ExcelCreatorOptions : ExecutorOptions
 {
-    public ExcelGeneratorOptions(string connectionString, FileInfo excelFilePath)
+    public ExcelCreatorOptions(string connectionString, FileInfo excelFilePath)
     {
         ConnectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
         ExcelFilePath = excelFilePath ?? throw new ArgumentNullException(nameof(excelFilePath));

@@ -1,4 +1,4 @@
-﻿using Datask.Tool.ExcelData.Core.Bases;
+﻿using Datask.Common.Utilities;
 
 namespace Datask.Tool.ExcelData.Core.Generators;
 

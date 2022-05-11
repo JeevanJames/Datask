@@ -6,7 +6,7 @@ using Datask.Providers.Schemas;
 
 namespace Datask.Tool.ExcelData.Core
 {
-    public record TableBindingModel
+    public sealed record TableBindingModel
     {
         public TableBindingModel(string name, string schema)
         {
@@ -21,7 +21,7 @@ namespace Datask.Tool.ExcelData.Core
         public IList<ColumnBindingModel> Columns { get; } = new List<ColumnBindingModel>();
     }
 
-    public class ColumnBindingModel : ColumnDefinition
+    public sealed class ColumnBindingModel : ColumnDefinition
     {
         public ColumnBindingModel(string name) : base(name)
         {

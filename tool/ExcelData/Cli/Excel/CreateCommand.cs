@@ -2,6 +2,8 @@
 // This file is licensed to you under the MIT License.
 // See the LICENSE file in the project root for more information.
 
+using Datask.Tool.ExcelData.Core.Excel.Creator;
+
 namespace Datask.Tool.ExcelData.Excel;
 
 [Command("create", ParentType = typeof(ExcelCommand))]
@@ -43,7 +45,7 @@ public sealed class CreateCommand : BaseCommand
             ExcelFile.Delete();
         }
 
-        ExcelGeneratorOptions options = new(ConnectionString, ExcelFile);
+        ExcelCreatorOptions options = new(ConnectionString, ExcelFile);
         options.IncludeTables.AddRange(IncludeTables.Distinct(StringComparer.OrdinalIgnoreCase));
         options.ExcludeTables.AddRange(ExcludeTables.Distinct(StringComparer.OrdinalIgnoreCase));
 

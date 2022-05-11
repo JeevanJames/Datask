@@ -1,6 +1,4 @@
-﻿using Datask.Tool.ExcelData.Core.Bases;
-
-namespace Datask.Tool.ExcelData.Core.Generators;
+﻿namespace Datask.Tool.ExcelData.Core.Generators;
 
 /// <summary>
 ///     Represents the options for generators that use the <see cref="Flavor"/> concept.

@@ -1,6 +1,4 @@
-﻿using System.Data;
-
-using Datask.Providers.Schemas;
+﻿using Datask.Common.Utilities;
 
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
@@ -25,7 +23,7 @@ public sealed class DataExcelWorkbook : IDisposable
         _workbook.Close();
     }
 
-    public IEnumerable<TableDefinition> EnumerateTables()
+    public IEnumerable<DataExcelTable> EnumerateTables()
     {
         for (int i = 0; i < _workbook.NumberOfSheets; i++)
         {
@@ -37,36 +35,89 @@ public sealed class DataExcelWorkbook : IDisposable
             if (wsTables.Count > 1)
                 throw new InvalidOperationException($"Worksheet {worksheet.SheetName} has more than one tables.");
 
-            XSSFTable wsTable = wsTables[0];
-            if (!TableDefinition.TryParse(wsTable.Name, out TableDefinition tableDefn))
+            yield return new DataExcelTable(wsTables[0]);
+        }
+    }
+}
+
+public sealed class DataExcelTable
+{
+    private readonly XSSFTable _table;
+    private readonly Lazy<IList<DataExcelTableColumn>> _columns;
+
+    internal DataExcelTable(XSSFTable table)
+    {
+        (Schema, TableName) = GetNames(table);
+        _table = table;
+        _columns = new Lazy<IList<DataExcelTableColumn>>(LoadColumns);
+    }
+
+    private (string Schema, string TableName) GetNames(XSSFTable table)
+    {
+        string[] parts = table.Name.Split(new[] { '.' }, 2, StringSplitOptions.None);
+        return parts.Length == 2
+            ? (parts[0], parts[1])
+            : throw new DataskException($"Excel table {table.DisplayName} has an invalid name.");
+    }
+
+    public string Schema { get; }
+
+    public string TableName { get; }
+
+    public IList<DataExcelTableColumn> Columns => _columns.Value;
+
+    public IEnumerable<object?[]> EnumerateRows()
+    {
+        CellReference startRef = _table.GetStartCellReference();
+        CellReference endRef = _table.GetEndCellReference();
+
+        XSSFSheet worksheet = _table.GetXSSFSheet();
+
+        for (int r = startRef.Row + 1; r <= endRef.Row; r++)
+        {
+            object?[] data = new object[Columns.Count];
+
+            IRow row = worksheet.GetRow(r);
+            for (int c = startRef.Col; c <= endRef.Col; c++)
             {
-                throw new InvalidOperationException(
-                    $"Worksheet {worksheet.SheetName} table {wsTable.Name} cannot be parsed as a table name.");
+                int index = c - startRef.Col;
+                if (index < row.Cells.Count)
+                {
+                    ICell cell = row.Cells[index];
+                    data[index] = cell.ToString();
+                }
+                else
+                    data[index] = null;
             }
 
-            IEnumerable<ColumnDefinition> columnDefns = EnumerateColumns(worksheet, wsTable);
-            foreach (ColumnDefinition columnDefn in columnDefns)
-            {
-                tableDefn.Columns.Add(columnDefn);
-            }
-
-            yield return tableDefn;
+            yield return data;
         }
     }
 
-    private IEnumerable<ColumnDefinition> EnumerateColumns(XSSFSheet worksheet, XSSFTable wsTable)
+    private IList<DataExcelTableColumn> LoadColumns()
     {
-        CellReference startRef = wsTable.GetStartCellReference();
-        CellReference endRef = wsTable.GetEndCellReference();
+        CellReference startRef = _table.GetStartCellReference();
+        CellReference endRef = _table.GetEndCellReference();
 
-        IRow headerRow = worksheet.GetRow(startRef.Row);
+        List<DataExcelTableColumn> columns = new(endRef.Col - startRef.Col + 1);
+
+        IRow headerRow = _table.GetXSSFSheet().GetRow(startRef.Row);
         for (int colIdx = startRef.Col; colIdx < endRef.Col; colIdx++)
         {
             ICell headerCell = headerRow.GetCell(colIdx);
-            yield return new ColumnDefinition(headerCell.StringCellValue)
-            {
-                ClrType = typeof(string), DatabaseType = "varchar", DbType = DbType.AnsiString,
-            };
+            columns.Add(new DataExcelTableColumn(headerCell));
         }
+
+        return columns;
     }
+}
+
+public sealed class DataExcelTableColumn
+{
+    public DataExcelTableColumn(ICell headerCell)
+    {
+        Text = headerCell.StringCellValue;
+    }
+
+    public string Text { get; }
 }
