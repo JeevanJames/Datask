@@ -228,7 +228,7 @@ public sealed class CSharpHelperGenerator : GeneratorBase<CSharpHelperGeneratorO
                 : $"BitConverter.GetBytes(Convert.ToUInt64({rowValue}))",
             DbType.Boolean => rowValue.ToString() == "0" ? "false" : "true",
             DbType.AnsiString or DbType.AnsiStringFixedLength or DbType.String or DbType.StringFixedLength
-                or DbType.Xml => $@"""{rowValue}""",
+                or DbType.Xml => $@"""{EscapeStringValue(rowValue.ToString())}""",
             DbType.Decimal or DbType.Single or DbType.Double
                 or DbType.Int16 or DbType.Int32 or DbType.Int64 or DbType.Byte => rowValue.ToString(),
             DbType.DateTime or DbType.Date or DbType.Time or DbType.DateTime2 => $@"DateTime.Parse(""{rowValue}"")",
@@ -236,6 +236,15 @@ public sealed class CSharpHelperGenerator : GeneratorBase<CSharpHelperGeneratorO
             DbType.Guid => $@"new Guid((string)""{rowValue}"")",
             _ => $@"""{rowValue}"""
         };
+
+        static string EscapeStringValue(string str)
+        {
+            return str
+                .Replace(@"\", @"\\") // First, replace backslash with double backslash (should be first)
+                .Replace(@"""", @"\""")
+                .Replace("\n", @"\n")
+                .Replace("\r", @"\r");
+        }
     }
 
     private static string RenderTemplate(string templateContent, object modelData)

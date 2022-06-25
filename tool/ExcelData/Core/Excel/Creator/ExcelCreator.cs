@@ -240,7 +240,7 @@ public sealed class ExcelGenerator : Executor<ExcelCreatorOptions, StatusEvents>
         tableRange.Style.Border.Bottom.Style = ExcelBorderStyle.Medium;
 
         //Adding a table to a Range
-        ExcelTable excelTable = worksheet.Tables.Add(tableRange, $"{table.Schema}.{table.Name}");
+        ExcelTable excelTable = worksheet.Tables.Add(tableRange, $"{table.Schema}.{table.Name.Replace(" ", "__")}");
 
         //Formatting the table style
         excelTable.TableStyle = TableStyles.Dark10;
