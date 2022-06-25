@@ -46,7 +46,7 @@ public sealed class DeployCommand : Command
     {
         using DbDeployer<SqlServerProvider> deployer = new(ConnectionString, DatabaseName);
 
-        MigrationDeploymentOptions options = new()
+        DeployOptions options = new()
         {
             Mode = Mode,
             HistoryTableSchema = MigrationTableSchema,
@@ -58,13 +58,13 @@ public sealed class DeployCommand : Command
         if (PreMigrationScriptDirs.Count > 0)
         {
             options.PreMigrationScriptDirs.AddRange(
-                PreMigrationScriptDirs.Select(s => new ScriptsDirectory(s.FullName, recursive: false)));
+                PreMigrationScriptDirs.Select(s => new ScriptsSpec(s.FullName, recursive: false)));
         }
 
         if (MigrationScriptsDirs.Count > 0)
         {
             options.MigrationScriptDirs.AddRange(
-                MigrationScriptsDirs.Select(di => (MigrationScriptsDirectory)di.FullName));
+                MigrationScriptsDirs.Select(di => (MigrationScriptsSpec)di.FullName));
         }
 
         foreach (DirectoryInfo dir in PreMigrationScriptDirs)
@@ -73,7 +73,7 @@ public sealed class DeployCommand : Command
         foreach (DirectoryInfo dir in MigrationScriptsDirs)
             AnsiConsole.MarkupLine($"Migration script dir: {dir}");
 
-        await deployer.DeployMigrationsAsync(options).ConfigureAwait(false);
+        await deployer.DeployAsync(options).ConfigureAwait(false);
 
         return 0;
     }

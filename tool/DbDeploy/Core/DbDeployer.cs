@@ -12,7 +12,7 @@ public sealed class DbDeployer<TProvider> : IDisposable
         _provider = ProviderFactory.Create<TProvider>(connectionString, databaseName);
     }
 
-    public Task DeployMigrationsAsync(MigrationDeploymentOptions options)
+    public Task DeployAsync(DeployOptions options)
     {
         if (options is null)
             throw new ArgumentNullException(nameof(options));
@@ -30,10 +30,10 @@ public sealed class DbDeployer<TProvider> : IDisposable
         if (string.IsNullOrWhiteSpace(options.HistoryTableSchema))
             throw new ArgumentException("Invalid migration history table schema.", nameof(options));
 
-        return DeployMigrationsTask(options);
+        return DeployTask(options);
     }
 
-    private async Task DeployMigrationsTask(MigrationDeploymentOptions options)
+    private async Task DeployTask(DeployOptions options)
     {
         MigrationsDeployer deployer = new(_provider, options);
         await deployer.DeployAsync();
@@ -50,62 +50,9 @@ public sealed class DbDeployer<TProvider> : IDisposable
     }
 }
 
-public sealed class MigrationDeploymentOptions
+public abstract class ScriptsSpecBase
 {
-    private readonly Lazy<IList<ScriptsDirectory>> _preMigrationScriptDirs = new(() => new List<ScriptsDirectory>());
-
-    private readonly Lazy<IList<MigrationScriptsDirectory>> _migrationScriptDirs =
-        new(() => new List<MigrationScriptsDirectory>());
-
-    private readonly Lazy<IList<ScriptsDirectory>> _postMigrationScriptDirs = new(() => new List<ScriptsDirectory>());
-
-    public DeployMode Mode { get; set; } = DeployMode.Migrate;
-
-    public string HistoryTableName { get; set; } = "__DataskMigrationHistory";
-
-    public string? HistoryTableSchema { get; set; }
-
-    public IList<ScriptsDirectory> PreMigrationScriptDirs => _preMigrationScriptDirs.Value;
-
-    public IList<MigrationScriptsDirectory> MigrationScriptDirs => _migrationScriptDirs.Value;
-
-    public IList<ScriptsDirectory> PostMigrationScriptDirs => _postMigrationScriptDirs.Value;
-
-    public bool HasPreMigrationScripts =>
-        _preMigrationScriptDirs.IsValueCreated && _preMigrationScriptDirs.Value.Count > 0;
-
-    public bool HasMigrationScripts => _migrationScriptDirs.IsValueCreated && _migrationScriptDirs.Value.Count > 0;
-
-    public bool HasPostMigrationScripts =>
-        _postMigrationScriptDirs.IsValueCreated && _postMigrationScriptDirs.Value.Count > 0;
-}
-
-public sealed class ScriptsDirectory
-{
-    public ScriptsDirectory(string directory, bool recursive = false)
-    {
-        if (directory is null)
-            throw new ArgumentNullException(nameof(directory));
-
-        if (directory.Trim().Length == 0)
-            directory = ".";
-
-        Directory = Path.GetFullPath(directory);
-
-        if (!System.IO.Directory.Exists(Directory))
-            throw new DirectoryNotFoundException($"The scripts directory '{Directory}' does not exist.");
-
-        Recursive = recursive;
-    }
-
-    public string Directory { get; }
-
-    public bool Recursive { get; }
-}
-
-public sealed class MigrationScriptsDirectory
-{
-    private MigrationScriptsDirectory(string directory)
+    protected ScriptsSpecBase(string directory)
     {
         if (directory is null)
             throw new ArgumentNullException(nameof(directory));
@@ -126,9 +73,30 @@ public sealed class MigrationScriptsDirectory
         return Directory;
     }
 
-    public static implicit operator string(MigrationScriptsDirectory dir) => dir.Directory;
+    public static implicit operator string(ScriptsSpecBase spec) => spec.Directory;
+}
 
-    public static implicit operator MigrationScriptsDirectory(string directory) => new(directory);
+public sealed class ScriptsSpec : ScriptsSpecBase
+{
+    public ScriptsSpec(string directory, bool recursive = false)
+        : base(directory)
+    {
+        Recursive = recursive;
+    }
+
+    public bool Recursive { get; }
+
+    public static implicit operator ScriptsSpec(string directory) => new(directory);
+}
+
+public sealed class MigrationScriptsSpec : ScriptsSpecBase
+{
+    private MigrationScriptsSpec(string directory)
+        : base(directory)
+    {
+    }
+
+    public static implicit operator MigrationScriptsSpec(string directory) => new(directory);
 }
 
 public enum DeployMode

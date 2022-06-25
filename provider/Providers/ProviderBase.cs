@@ -58,12 +58,16 @@ public abstract class ProviderBase<TConnection, TDbManagement, TSchemaQuery, TSc
         _standardsProvider = new Lazy<TStandards>(InstantiateSubProvider<TStandards>);
     }
 
+    /// <inheritdoc />
     public IDbManagementProvider DbManagement => _dbManagement.Value;
 
+    /// <inheritdoc />
     public ISchemaQueryProvider SchemaQuery => _schemaQueryProvider.Value;
 
+    /// <inheritdoc />
     public IScriptGeneratorProvider ScriptGenerator => _scriptGeneratorProvider.Value;
 
+    /// <inheritdoc />
     public IStandardsProvider Standards => _standardsProvider.Value;
 
     protected virtual void Dispose(bool disposing)

@@ -1,13 +1,13 @@
-﻿using Datask.Providers;
+﻿ using Datask.Providers;
 
 namespace Datask.Tool.DbDeploy.Core;
 
 internal sealed class MigrationsDeployer
 {
     private readonly IProvider _provider;
-    private readonly MigrationDeploymentOptions _options;
+    private readonly DeployOptions _options;
 
-    internal MigrationsDeployer(IProvider provider, MigrationDeploymentOptions options)
+    internal MigrationsDeployer(IProvider provider, DeployOptions options)
     {
         _provider = provider;
         _options = options;
@@ -41,9 +41,9 @@ internal sealed class MigrationsDeployer
     {
         if (_options.HasPreMigrationScripts)
         {
-            foreach (ScriptsDirectory scriptsDir in _options.PreMigrationScriptDirs)
+            foreach (ScriptsSpec preScript in _options.PreMigrationScriptDirs)
             {
-                foreach (string scriptFile in EnumerateScriptFiles(scriptsDir.Directory, scriptsDir.Recursive))
+                foreach (string scriptFile in EnumerateScriptFiles(preScript.Directory, preScript.Recursive))
                 {
                     yield return new ScriptFile(scriptFile,
                         await File.ReadAllTextAsync(scriptFile).ConfigureAwait(false),
@@ -54,13 +54,26 @@ internal sealed class MigrationsDeployer
 
         if (_options.HasMigrationScripts)
         {
-            foreach (string scriptsDir in _options.MigrationScriptDirs)
+            foreach (string migrationScript in _options.MigrationScriptDirs)
             {
-                foreach (string scriptFile in EnumerateScriptFiles(scriptsDir, recursive: false))
+                foreach (string scriptFile in EnumerateScriptFiles(migrationScript, recursive: false))
                 {
                     yield return new ScriptFile(scriptFile,
                         await File.ReadAllTextAsync(scriptFile).ConfigureAwait(false),
                         isMigration: true);
+                }
+            }
+        }
+
+        if (_options.HasPostMigrationScripts)
+        {
+            foreach (ScriptsSpec postScript in _options.PostMigrationScriptDirs)
+            {
+                foreach (string scriptFile in EnumerateScriptFiles(postScript.Directory, postScript.Recursive))
+                {
+                    yield return new ScriptFile(scriptFile,
+                        await File.ReadAllTextAsync(scriptFile).ConfigureAwait(false),
+                        isMigration: false);
                 }
             }
         }

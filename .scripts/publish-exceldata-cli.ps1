@@ -12,4 +12,5 @@ if (-Not $Version) {
 }
 
 dotnet pack ./tool/ExcelData/Cli/Cli.csproj -c Release-Tool /p:Version=$Version
-dotnet nuget push ./tool/ExcelData/Cli/bin/Release-Tool/datask-excel.$Version.nupkg --source https://www.myget.org/F/jeevanjames/api/v2/package
+# dotnet nuget push ./tool/ExcelData/Cli/bin/Release-Tool/datask-excel.$Version.nupkg --source https://www.myget.org/F/jeevanjames/api/v2/package
+dotnet nuget push ./tool/ExcelData/Cli/bin/Release-Tool/datask-excel.$Version.nupkg --source https://api.nuget.org/v3/index.json

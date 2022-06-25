@@ -10,6 +10,7 @@ using Microsoft.SqlServer.Management.Smo;
 
 namespace Datask.Providers.SqlServer;
 
+/// <inheritdoc />
 public sealed class SqlServerDbManagementProvider : DbManagementProvider<SqlConnection>, IDisposable
 {
     private readonly SqlConnection _serverConnection;
@@ -29,11 +30,13 @@ public sealed class SqlServerDbManagementProvider : DbManagementProvider<SqlConn
         _server = new Server(new ServerConnection(_serverConnection));
     }
 
+    /// <inheritdoc />
     public void Dispose()
     {
         _serverConnection.Dispose();
     }
 
+    /// <inheritdoc />
     protected override bool TryCreateDatabase()
     {
         Database database = _server.Databases[_databaseName];
@@ -45,6 +48,7 @@ public sealed class SqlServerDbManagementProvider : DbManagementProvider<SqlConn
         return true;
     }
 
+    /// <inheritdoc />
     protected override void DeleteDatabase()
     {
         Database database = _server.Databases[_databaseName];
@@ -52,11 +56,13 @@ public sealed class SqlServerDbManagementProvider : DbManagementProvider<SqlConn
             _server.KillDatabase(_databaseName);
     }
 
+    /// <inheritdoc />
     protected override bool DatabaseExists()
     {
         return _server.Databases[_databaseName] is not null;
     }
 
+    /// <inheritdoc />
     public override async Task ExecuteScriptsAsync(IAsyncEnumerable<string> scripts)
     {
         Database database = _server.Databases[_databaseName];
@@ -64,6 +70,7 @@ public sealed class SqlServerDbManagementProvider : DbManagementProvider<SqlConn
             database.ExecuteNonQuery(script);
     }
 
+    /// <inheritdoc />
     protected override void ExecuteScript(string script)
     {
         Database database = _server.Databases[_databaseName];

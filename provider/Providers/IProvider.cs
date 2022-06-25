@@ -9,6 +9,9 @@ using Datask.Providers.Standards;
 
 namespace Datask.Providers;
 
+/// <summary>
+///     Provides groups of capabilities for interacting with databases.
+/// </summary>
 public interface IProvider : IDisposable
 {
     IDbManagementProvider DbManagement { get; }
