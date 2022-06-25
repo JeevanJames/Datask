@@ -35,7 +35,7 @@ public sealed class CSharpHelperGenerator : GeneratorBase<CSharpHelperGeneratorO
         await using FileStream outputFile = File.Create(filePath);
         await using StreamWriter writer = new(outputFile);
 
-        await writer.WriteAsync(RenderTemplate(await CSharpHelperTemplates.PopulateDataTemplate(), Options))
+        await writer.WriteAsync(RenderTemplate(await CSharpHelperTemplates.PopulateDataTemplate, Options))
             .ConfigureAwait(false);
 
         foreach (Flavor flavor in Options.Flavors)
@@ -44,7 +44,7 @@ public sealed class CSharpHelperGenerator : GeneratorBase<CSharpHelperGeneratorO
                 "Generating data helper for {Flavor} information.",
                 new { Flavor = flavor.Name });
 
-            await writer.WriteAsync(RenderTemplate(await CSharpHelperTemplates.PopulateFlavorDataTemplate(),
+            await writer.WriteAsync(RenderTemplate(await CSharpHelperTemplates.PopulateFlavorDataTemplate,
                     Options.Flavors.Count > 1 ? flavor.Name : "Default"))
                 .ConfigureAwait(false);
 
@@ -80,7 +80,7 @@ public sealed class CSharpHelperGenerator : GeneratorBase<CSharpHelperGeneratorO
 
                 flavor.TableDefinitions.Add(td);
 
-                await writer.WriteAsync(RenderTemplate(await CSharpHelperTemplates.PopulateTableDataTemplate(),
+                await writer.WriteAsync(RenderTemplate(await CSharpHelperTemplates.PopulateTableDataTemplate,
                     new
                     {
                         table = td, dr = dataRows, fullRows, has_identity_column = td.Columns.Any(c => c.IsIdentity)
@@ -108,7 +108,7 @@ public sealed class CSharpHelperGenerator : GeneratorBase<CSharpHelperGeneratorO
             tables.Add(new TableBindingModel(tableName.Skip(1).First(), tableName.Take(1).First()));
         }
 
-        await writer.WriteAsync(RenderTemplate(await CSharpHelperTemplates.PopulateConsolidatedDataTemplate(),
+        await writer.WriteAsync(RenderTemplate(await CSharpHelperTemplates.PopulateConsolidatedDataTemplate,
                 tables.Select(t => new { schema = t.Schema, name = t.Name }).ToList()))
             .ConfigureAwait(false);
     }
