@@ -206,7 +206,7 @@ public sealed class CSharpHelperGenerator : GeneratorBase<CSharpHelperGeneratorO
                     continue;
 
                 rowList.Add(
-                    ConvertObjectValToCSharpType(row.GetCell(j), td.Columns[j].DbType, td.Columns[j].NativeType));
+                    ConvertObjectValToCSharpType(row.GetCell(j), td.Columns[j].DbType, td.Columns[j].NativeType, td.Columns[j].IsNullable));
             }
 
             if (rowList.Count > 0)
@@ -216,7 +216,7 @@ public sealed class CSharpHelperGenerator : GeneratorBase<CSharpHelperGeneratorO
         return dataRows;
     }
 
-    private static string ConvertObjectValToCSharpType(object? rowValue, DbType columnType, string nativeType)
+    private static string ConvertObjectValToCSharpType(object? rowValue, DbType columnType, string nativeType, bool isNullable)
     {
         if (rowValue is null)
             return "null";
@@ -230,7 +230,9 @@ public sealed class CSharpHelperGenerator : GeneratorBase<CSharpHelperGeneratorO
             DbType.AnsiString or DbType.AnsiStringFixedLength or DbType.String or DbType.StringFixedLength
                 or DbType.Xml => $@"""{EscapeStringValue(rowValue.ToString())}""",
             DbType.Decimal or DbType.Single or DbType.Double
-                or DbType.Int16 or DbType.Int32 or DbType.Int64 or DbType.Byte => rowValue.ToString(),
+                or DbType.Int16 or DbType.Int32 or DbType.Int64 or DbType.Byte => isNullable
+                && rowValue.ToString().Equals("NULL", StringComparison.OrdinalIgnoreCase)
+                ? "null" : rowValue.ToString(),
             DbType.DateTime or DbType.Date or DbType.Time or DbType.DateTime2 => $@"DateTime.Parse(""{rowValue}"")",
             DbType.DateTimeOffset => $@"DateTimeOffset.Parse((string)""{rowValue}"")",
             DbType.Guid => $@"new Guid((string)""{rowValue}"")",
