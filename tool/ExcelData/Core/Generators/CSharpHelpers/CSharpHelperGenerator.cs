@@ -83,7 +83,10 @@ public sealed class CSharpHelperGenerator : GeneratorBase<CSharpHelperGeneratorO
                 await writer.WriteAsync(RenderTemplate(await CSharpHelperTemplates.PopulateTableDataTemplate,
                     new
                     {
-                        table = td, dr = dataRows, fullRows, has_identity_column = td.Columns.Any(c => c.IsIdentity)
+                        table = td,
+                        dr = dataRows,
+                        fullRows,
+                        has_identity_column = td.Columns.Any(c => c.IsIdentity)
                     })).ConfigureAwait(false);
             }
 
@@ -218,7 +221,7 @@ public sealed class CSharpHelperGenerator : GeneratorBase<CSharpHelperGeneratorO
 
     private static string ConvertObjectValToCSharpType(object? rowValue, DbType columnType, string nativeType, bool isNullable)
     {
-        if (rowValue is null)
+        if (rowValue is null || (isNullable && rowValue.ToString().Equals("NULL", StringComparison.OrdinalIgnoreCase)))
             return "null";
 
         return columnType switch
@@ -230,9 +233,7 @@ public sealed class CSharpHelperGenerator : GeneratorBase<CSharpHelperGeneratorO
             DbType.AnsiString or DbType.AnsiStringFixedLength or DbType.String or DbType.StringFixedLength
                 or DbType.Xml => $@"""{EscapeStringValue(rowValue.ToString())}""",
             DbType.Decimal or DbType.Single or DbType.Double
-                or DbType.Int16 or DbType.Int32 or DbType.Int64 or DbType.Byte => isNullable
-                && rowValue.ToString().Equals("NULL", StringComparison.OrdinalIgnoreCase)
-                ? "null" : rowValue.ToString(),
+                or DbType.Int16 or DbType.Int32 or DbType.Int64 or DbType.Byte => rowValue.ToString(),
             DbType.DateTime or DbType.Date or DbType.Time or DbType.DateTime2 => $@"DateTime.Parse(""{rowValue}"")",
             DbType.DateTimeOffset => $@"DateTimeOffset.Parse((string)""{rowValue}"")",
             DbType.Guid => $@"new Guid((string)""{rowValue}"")",
