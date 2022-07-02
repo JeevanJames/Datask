@@ -60,8 +60,8 @@ public sealed class ExcelGenerator : Executor<ExcelCreatorOptions, StatusEvents>
                 worksheet.Cells[1, columnIndex].Style.Font.Bold = true;
                 worksheet.Cells[1, columnIndex].AutoFitColumns();
 
-                ApplyDataValidations(worksheet, columnIndex, table);
-                AddColumnMetadata(worksheet, columnIndex, table);
+                ApplyDataValidations(worksheet, columnIndex, column);
+                AddColumnMetadata(worksheet, columnIndex, column);
 
                 columnIndex++;
             }
@@ -94,10 +94,8 @@ public sealed class ExcelGenerator : Executor<ExcelCreatorOptions, StatusEvents>
         return true;
     }
 
-    private static void ApplyDataValidations(ExcelWorksheet worksheet, int columnIndex, TableDefinition table)
+    private static void ApplyDataValidations(ExcelWorksheet worksheet, int columnIndex, ColumnDefinition column)
     {
-        ColumnDefinition column = table.Columns[columnIndex - 1];
-
         string columnDataRange = ExcelCellBase.GetAddress(2, columnIndex, ExcelPackage.MaxRows, columnIndex);
 
         //Primary Key data validation
@@ -199,9 +197,8 @@ public sealed class ExcelGenerator : Executor<ExcelCreatorOptions, StatusEvents>
         }
     }
 
-    private static void AddColumnMetadata(ExcelWorksheet worksheet, int columnIndex, TableDefinition tableInfo)
+    private static void AddColumnMetadata(ExcelWorksheet worksheet, int columnIndex, ColumnDefinition column)
     {
-        ColumnDefinition column = tableInfo.Columns[columnIndex - 1];
         var metadata = new
         {
             column.Name,
