@@ -7,6 +7,4 @@ namespace Datask.Providers.Schemas;
 public interface ISchemaQueryProvider
 {
     Task<TableDefinitionCollection> GetTables(GetTableOptions? options = null);
-
-    string GetFullTableName(string schema, string table);
 }

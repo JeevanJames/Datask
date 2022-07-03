@@ -1,18 +1,25 @@
-﻿namespace Datask.Tool.ExcelData.Core.Excel.Creator;
+﻿using Datask.Providers;
 
-public sealed class ExcelCreatorOptions : ExecutorOptions
+namespace Datask.Tool.ExcelData.Core.Excel.Creator;
+
+public sealed class ExcelCreatorOptions : ProviderExecutorOptions
 {
-    public ExcelCreatorOptions(string connectionString, FileInfo excelFilePath)
+    private IList<string>? _includeTables;
+    private IList<string>? _excludeTables;
+
+    public ExcelCreatorOptions(Type providerType, string connectionString, FileInfo excelFilePath)
+        : base(providerType, connectionString)
     {
-        ConnectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
         ExcelFilePath = excelFilePath ?? throw new ArgumentNullException(nameof(excelFilePath));
     }
 
-    public string ConnectionString { get; }
-
     public FileInfo ExcelFilePath { get; }
 
-    public IList<string> IncludeTables { get; } = new List<string>();
+    public IList<string> IncludeTables => _includeTables ??= new List<string>();
 
-    public IList<string> ExcludeTables { get; } = new List<string>();
+    public bool HasIncludeTables => _includeTables is not null;
+
+    public IList<string> ExcludeTables => _excludeTables ??= new List<string>();
+
+    public bool HasExcludeTables => _excludeTables is not null;
 }

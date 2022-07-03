@@ -2,6 +2,9 @@
 // This file is licensed to you under the MIT License.
 // See the LICENSE file in the project root for more information.
 
+using Datask.Providers.SqlServer;
+using Datask.Tool.ExcelData.Core.Excel.Validator;
+
 namespace Datask.Tool.ExcelData.Excel;
 
 [Command("validate", ParentType = typeof(ExcelCommand))]
@@ -20,11 +23,20 @@ public sealed class ValidateCommand : BaseCommand
     [FlagHelp("Start an interactive session to fix validation issues.")]
     public bool Fix { get; set; }
 
-    protected override Task<int> ExecuteAsync(StatusContext ctx, IParseResult parseResult)
+    protected override async Task<int> ExecuteAsync(StatusContext ctx, IParseResult parseResult)
     {
         AnsiConsole.MarkupLine($"Excel file path  : {ExcelFile.FullName}");
         AnsiConsole.MarkupLine($"Connection string: {ConnectionString}");
         AnsiConsole.MarkupLine($"Fix errors       : {Fix}");
-        return Task.FromResult(0);
+
+        ExcelValidatorOptions options = new(typeof(SqlServerProvider), ConnectionString, ExcelFile);
+        ExcelValidator validator = new(options);
+        await validator.ExecuteAsync().ConfigureAwait(false);
+
+        AnsiConsole.MarkupLine($"Differences found: {validator.Diffs.Count}");
+        foreach (ValidationDiff diff in validator.Diffs)
+            AnsiConsole.MarkupLine(diff.ToString());
+
+        return validator.Diffs.Count;
     }
 }

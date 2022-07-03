@@ -44,7 +44,10 @@ public sealed class SqlServerSchemaQueryProvider : SchemaQueryProvider<SqlConnec
         List<TableDefinition> allTables = new();
         foreach (dynamic table in tables)
         {
-            TableDefinition tableDefn = new(table.Name, table.Schema, GetFullTableName(table.Schema, table.Name));
+            DbObjectName tableName = options.CustomizeTableName?.Invoke((string)table.Schema, (string)table.Name)
+                ?? new DbObjectName((string)table.Schema, (string)table.Name);
+
+            TableDefinition tableDefn = new(tableName);
             if (allTableColumns is not null)
                 AssignColumns(tableDefn, allTableColumns);
             if (allTableReferences is not null)
@@ -58,7 +61,7 @@ public sealed class SqlServerSchemaQueryProvider : SchemaQueryProvider<SqlConnec
     private static void AssignColumns(TableDefinition table, IEnumerable<dynamic> dynamicColumns)
     {
         IEnumerable<ColumnDefinition> columns = dynamicColumns
-            .Where(c => table.Name.Equals((string)c.Table) && table.Schema.Equals((string)c.Schema))
+            .Where(c => table.Name.Name.Equals((string)c.Table) && table.Name.Schema.Equals((string)c.Schema))
             .Select(c =>
             {
                 (Type ClrType, DbType DbType) mappings = TypeMappings.GetMappings(c.DbDataType);
@@ -81,7 +84,7 @@ public sealed class SqlServerSchemaQueryProvider : SchemaQueryProvider<SqlConnec
     private static void AssignReferences(TableDefinition table, IEnumerable<dynamic> references)
     {
         IEnumerable<dynamic> tableReferences = references.Where(r => table.Name.Equals((string)r.ReferencingTable)
-            && table.Schema.Equals((string)r.ReferencingSchema));
+            && table.Name.Schema.Equals((string)r.ReferencingSchema));
 
         foreach (dynamic tableReference in tableReferences)
         {
@@ -90,14 +93,10 @@ public sealed class SqlServerSchemaQueryProvider : SchemaQueryProvider<SqlConnec
                 .Single(cd => cd.Name.Equals(columnName, StringComparison.Ordinal));
             if (column.ForeignKey is not null)
                 throw new InvalidOperationException();
-            column.ForeignKey = new ForeignKeyDefinition((string)tableReference.ReferencedSchema,
-                (string)tableReference.ReferencedTable, (string)tableReference.ReferencedColumn);
+            column.ForeignKey = new ForeignKeyDefinition(
+                new DbObjectName((string)tableReference.ReferencedSchema, (string)tableReference.ReferencedTable),
+                (string)tableReference.ReferencedColumn);
         }
-    }
-
-    public override string GetFullTableName(string schema, string table)
-    {
-        return $"[{schema}].[{table}]";
     }
 }
 

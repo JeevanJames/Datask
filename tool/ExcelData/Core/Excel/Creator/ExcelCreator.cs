@@ -5,7 +5,6 @@ using System.Text.Json;
 using Datask.Common.Utilities;
 using Datask.Providers;
 using Datask.Providers.Schemas;
-using Datask.Providers.SqlServer;
 
 using OfficeOpenXml;
 using OfficeOpenXml.DataValidation.Contracts;
@@ -14,29 +13,25 @@ using OfficeOpenXml.Table;
 
 namespace Datask.Tool.ExcelData.Core.Excel.Creator;
 
-public sealed class ExcelGenerator : Executor<ExcelCreatorOptions, StatusEvents>
+public sealed class ExcelCreator : ProviderExecutor<ExcelCreatorOptions, StatusEvents>
 {
-    private readonly ExcelCreatorOptions _options;
-
-    public ExcelGenerator(ExcelCreatorOptions options)
+    public ExcelCreator(ExcelCreatorOptions options)
         : base(options)
     {
-        _options = options ?? throw new ArgumentNullException(nameof(options));
     }
 
-    public override async Task ExecuteAsync()
+    protected override async Task InternalExecuteAsync()
     {
-        FileHelpers.EnsureDirectoryExists(_options.ExcelFilePath.FullName);
+        FileHelpers.EnsureDirectoryExists(Options.ExcelFilePath.FullName);
 
-        using ExcelPackage package = new(_options.ExcelFilePath);
+        using ExcelPackage package = new(Options.ExcelFilePath);
         await FillExcelData(package.Workbook).ConfigureAwait(false);
         package.Save();
     }
 
     private async Task FillExcelData(ExcelWorkbook workbook)
     {
-        IProvider provider = new SqlServerProvider(_options.ConnectionString);
-        TableDefinitionCollection tables = await provider.SchemaQuery.GetTables(new GetTableOptions
+        TableDefinitionCollection tables = await Provider.SchemaQuery.GetTables(new GetTableOptions
         {
             IncludeColumns = true,
             IncludeForeignKeys = true,
@@ -47,7 +42,7 @@ public sealed class ExcelGenerator : Executor<ExcelCreatorOptions, StatusEvents>
         {
             FireStatusEvent(StatusEvents.Generate,
                 "Getting database table {Table} information.",
-                new { Table = $"{table.Schema}.{table.Name}" });
+                new { Table = table.Name });
 
             // Try creating the worksheet for the table, if it doesn't already exist.
             if (!TryCreateWorksheet(workbook, table, out ExcelWorksheet? worksheet))
@@ -71,16 +66,16 @@ public sealed class ExcelGenerator : Executor<ExcelCreatorOptions, StatusEvents>
         }
     }
 
-    private static bool TryCreateWorksheet(ExcelWorkbook workbook, TableDefinition table,
+    private bool TryCreateWorksheet(ExcelWorkbook workbook, TableDefinition table,
         [NotNullWhen(true)] out ExcelWorksheet? worksheet)
     {
-        if (workbook.Worksheets.SelectMany(ws => ws.Tables).Any(tbl => tbl.Name == table.FullName))
+        if (workbook.Worksheets.SelectMany(ws => ws.Tables).Any(tbl => tbl.Name == table.Name.ToString()))
         {
             worksheet = null;
             return false;
         }
 
-        string tableFullName = $"{table.Schema}.{table.Name}";
+        string tableFullName = $"{table.Name.Schema}.{table.Name.Name}";
         string worksheetName;
         if (tableFullName.Length > 31)
         {
@@ -120,13 +115,13 @@ public sealed class ExcelGenerator : Executor<ExcelCreatorOptions, StatusEvents>
 
         if (column.IsForeignKey && !column.IsPrimaryKey)
         {
-            string foreignKeyTableName = $"{column.ForeignKey.Schema}.{column.ForeignKey.Table}";
+            string foreignKeyTableName = $"{column.ForeignKey.Value.Table.Schema}.{column.ForeignKey.Value.Table.Name}";
             ExcelTable? excelTable = worksheet.Workbook.Worksheets.SelectMany(ws => ws.Tables)
                 .FirstOrDefault(t => t.Name == foreignKeyTableName);
 
             if (excelTable is not null)
             {
-                int? fkColumnPosition = excelTable.Columns[column.ForeignKey.Column]?.Id;
+                int? fkColumnPosition = excelTable.Columns[column.ForeignKey.Value.Column]?.Id;
                 if (fkColumnPosition is not null)
                 {
                     //var fkCellRange = ExcelRange.GetAddress(2, i, ExcelPackage.MaxRows, i);
@@ -216,9 +211,9 @@ public sealed class ExcelGenerator : Executor<ExcelCreatorOptions, StatusEvents>
             column.IsForeignKey,
             ForeignKey = new
             {
-                Schema = column.IsForeignKey ? column.ForeignKey.Schema : string.Empty,
-                Table = column.IsForeignKey ? column.ForeignKey.Table : string.Empty,
-                Column = column.IsForeignKey ? column.ForeignKey.Column : string.Empty,
+                Schema = column.IsForeignKey ? column.ForeignKey.Value.Table.Schema : string.Empty,
+                Table = column.IsForeignKey ? column.ForeignKey.Value.Table.Name : string.Empty,
+                Column = column.IsForeignKey ? column.ForeignKey.Value.Column : string.Empty,
             }
         };
 
@@ -240,7 +235,7 @@ public sealed class ExcelGenerator : Executor<ExcelCreatorOptions, StatusEvents>
         tableRange.Style.Border.Bottom.Style = ExcelBorderStyle.Medium;
 
         //Adding a table to a Range
-        ExcelTable excelTable = worksheet.Tables.Add(tableRange, $"{table.Schema}.{table.Name.Replace(" ", "__")}");
+        ExcelTable excelTable = worksheet.Tables.Add(tableRange, $"{table.Name.Schema}.{table.Name.Name.Replace(" ", "__")}");
 
         //Formatting the table style
         excelTable.TableStyle = TableStyles.Dark10;

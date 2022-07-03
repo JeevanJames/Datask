@@ -8,3 +8,11 @@ public interface IStandardsProvider
 
     bool IsValidObjectName(string objectName);
 }
+
+public static class StandardsProviderExtensions
+{
+    public static string CreateFullObjectName(this IStandardsProvider provider, DbObjectName dbObjectName)
+    {
+        return provider.CreateFullObjectName(dbObjectName.Schema, dbObjectName.Name);
+    }
+}

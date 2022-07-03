@@ -15,33 +15,45 @@ public abstract class SchemaQueryProvider<TConnection> : SubProviderBase<TConnec
     {
     }
 
-    public Task<TableDefinitionCollection> GetTables(GetTableOptions? options = null)
+    public async Task<TableDefinitionCollection> GetTables(GetTableOptions? options = null)
     {
         options ??= new GetTableOptions();
         if (options.IncludeForeignKeys)
             options.IncludeColumns = true;
 
-        return GetTablesTask(options);
-    }
+        TableDefinitionCollection tables = await GetTablesTask(options);
 
-    protected abstract Task<TableDefinitionCollection> GetTablesTask(GetTableOptions options);
-
-    protected virtual IEnumerable<TableDefinition> FilterTables(IList<TableDefinition> allTables, GetTableOptions options)
-    {
-        IEnumerable<TableDefinition> tables = allTables;
-
-        foreach (Regex pattern in options.IncludeTables)
-            tables = tables.Where(t => pattern.IsMatch(t.FullName));
-
-        foreach (Regex pattern in options.ExcludeTables)
-            tables = tables.Where(t => !pattern.IsMatch(t.FullName));
+        if (options.SortByForeignKeyDependencies)
+            tables.SortByForeignKeyDependencies();
 
         return tables;
     }
 
-    public virtual string GetFullTableName(string schema, string table)
-    {
-        return schema + "." + table;
-    }
+    protected abstract Task<TableDefinitionCollection> GetTablesTask(GetTableOptions options);
 
+    /// <summary>
+    ///     Helper method to filter a list of tables using the <see cref="GetTableOptions.IncludeTables"/>
+    ///     and <see cref="GetTableOptions.ExcludeTables"/> criteria.
+    /// </summary>
+    /// <param name="allTables">The list of tables to filter.</param>
+    /// <param name="options">The <see cref="GetTableOptions"/> instance that contains the filter criteria.</param>
+    /// <returns>A sequence of filtered tables.</returns>
+    protected virtual IEnumerable<TableDefinition> FilterTables(IList<TableDefinition> allTables, GetTableOptions options)
+    {
+        IEnumerable<TableDefinition> tables = allTables;
+
+        if (options.HasIncludeTables)
+        {
+            foreach (Regex pattern in options.IncludeTables)
+                tables = tables.Where(t => pattern.IsMatch(t.Name.ToString()));
+        }
+
+        if (options.HasExcludeTables)
+        {
+            foreach (Regex pattern in options.ExcludeTables)
+                tables = tables.Where(t => !pattern.IsMatch(t.Name.ToString()));
+        }
+
+        return tables;
+    }
 }

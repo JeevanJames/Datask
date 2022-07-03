@@ -24,7 +24,7 @@ public sealed class CSharpHelperGenerator : GeneratorBase<CSharpHelperGeneratorO
     {
     }
 
-    public override async Task ExecuteAsync()
+    protected override async Task InternalExecuteAsync()
     {
         if (Options.Flavors is null or { Count: 0 })
             return;
@@ -121,23 +121,36 @@ public sealed class CSharpHelperGenerator : GeneratorBase<CSharpHelperGeneratorO
         for (int cellIdx = 0; cellIdx < cellCount; cellIdx++)
         {
             ICell cell = headerRow.GetCell(cellIdx);
-            if (cell is null || string.IsNullOrWhiteSpace(cell.ToString()))
+            if (cell is null)
+            {
                 throw new DataskException(
                     $"Cell in worksheet '{worksheet.SheetName}' at index {cellIdx} could not be retrieved.");
+            }
 
-            string cellMetadata = cell.CellComment.String.ToString();
+            string? cellStr = cell.ToString();
+            if (string.IsNullOrWhiteSpace(cellStr))
+            {
+                throw new DataskException(
+                    $"Cell in worksheet '{worksheet.SheetName}' at index {cellIdx} does not have a string representation.");
+            }
+
+            string? cellMetadata = cell.CellComment.String.ToString();
             if (cellMetadata is null)
+            {
                 throw new DataskException(
                     $"Cell in worksheet '{worksheet.SheetName}' at index {cellIdx} does not have the metadata comment.");
+            }
 
             Dictionary<string, object>? columnMetadata =
                 JsonSerializer.Deserialize<Dictionary<string, object>>(cellMetadata);
 
             if (columnMetadata is null)
+            {
                 throw new DataskException(
                     $"Cell in worksheet '{worksheet.SheetName}' at index {cellIdx} has an invalid metadata comment.");
+            }
 
-            ColumnBindingModel column = new(cell.ToString())
+            ColumnBindingModel column = new(cellStr)
             {
                 DbType = GetMetadata("DbType", Enum.Parse<DbType>),
                 DatabaseType = GetMetadata("DbType", o => $"DbType.{o}"),
@@ -177,11 +190,11 @@ public sealed class CSharpHelperGenerator : GeneratorBase<CSharpHelperGeneratorO
 
             T GetMetadata<T>(string name, Func<string, T> converter)
             {
-                if (!columnMetadata.TryGetValue(name, out object objectValue))
-                    throw new DataskException(
-                        $"Cell in worksheet '{worksheet.SheetName}' at index {cellIdx} does not have the {name} metadata.");
+                if (columnMetadata.TryGetValue(name, out object? objectValue))
+                    return converter(objectValue.ToString()!);
+                throw new DataskException(
+                    $"Cell in worksheet '{worksheet.SheetName}' at index {cellIdx} does not have the {name} metadata.");
 
-                return converter(objectValue.ToString());
             }
         }
     }

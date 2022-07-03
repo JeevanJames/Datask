@@ -6,19 +6,5 @@ using System.Diagnostics;
 
 namespace Datask.Providers.Schemas;
 
-[DebuggerDisplay("{Schema,nq}.{Table,nq}.{Column,nq}")]
-public sealed class ForeignKeyDefinition
-{
-    public ForeignKeyDefinition(string schema, string table, string column)
-    {
-        Schema = schema;
-        Table = table;
-        Column = column;
-    }
-
-    public string Schema { get; }
-
-    public string Table { get; }
-
-    public string Column { get; }
-}
+[DebuggerDisplay("{Table,nq}.{Column,nq}")]
+public readonly record struct ForeignKeyDefinition(DbObjectName Table, string Column);

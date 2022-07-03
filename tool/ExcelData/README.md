@@ -43,7 +43,7 @@ Updates an Excel file with changes in the database, while maintaining existing d
 
 ```
 Usage:
-  exceldata validate <connection string> <file name>
+  exceldata validate <connection string> <file name> --fix
 
 Arguments:
   <connection string>   The connection string to the database to update the Excel

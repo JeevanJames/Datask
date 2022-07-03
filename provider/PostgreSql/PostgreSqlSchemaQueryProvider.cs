@@ -19,9 +19,4 @@ public sealed class PostgreSqlSchemaQueryProvider : SchemaQueryProvider<NpgsqlCo
     {
         throw new NotImplementedException();
     }
-
-    public override string GetFullTableName(string schema, string table)
-    {
-        return $@"""{schema}"".""{table}""";
-    }
 }

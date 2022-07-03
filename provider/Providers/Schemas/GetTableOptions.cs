@@ -8,14 +8,22 @@ namespace Datask.Providers.Schemas;
 
 public sealed class GetTableOptions
 {
-    private readonly Lazy<IList<Regex>> _includeTables = new(() => new List<Regex>());
-    private readonly Lazy<IList<Regex>> _excludeTables = new(() => new List<Regex>());
+    private IList<Regex>? _includeTables;
+    private IList<Regex>? _excludeTables;
 
-    public IList<Regex> IncludeTables => _includeTables.IsValueCreated ? _includeTables.Value : Array.Empty<Regex>();
+    public IList<Regex> IncludeTables => _includeTables ??= new List<Regex>();
 
-    public IList<Regex> ExcludeTables => _excludeTables.IsValueCreated ? _excludeTables.Value : Array.Empty<Regex>();
+    public bool HasIncludeTables => _includeTables is not null;
+
+    public IList<Regex> ExcludeTables => _excludeTables ??= new List<Regex>();
+
+    public bool HasExcludeTables => _excludeTables is not null;
 
     public bool IncludeColumns { get; set; }
 
     public bool IncludeForeignKeys { get; set; }
+
+    public bool SortByForeignKeyDependencies { get; set; }
+
+    public Func<string, string, DbObjectName>? CustomizeTableName { get; set; }
 }

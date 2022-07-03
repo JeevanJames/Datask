@@ -27,7 +27,6 @@
     <ItemGroup>
         <ProjectReference Include="..\..\..\common\Utilities\Utilities.csproj" />
         <ProjectReference Include="..\..\..\provider\Providers\Providers.csproj" />
-        <ProjectReference Include="..\..\..\provider\SqlServer\SqlServer.csproj" />
     </ItemGroup>
 
 </Project>

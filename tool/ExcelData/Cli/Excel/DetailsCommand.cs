@@ -17,9 +17,13 @@ public sealed class DetailsCommand : Command
         DataExcelWorkbook workbook = new(ExcelFile.FullName);
         foreach (DataExcelTable table in workbook.EnumerateTables())
         {
-            MarkupLine($"[cyan]{table.Schema}.{table.TableName}[/]");
+            MarkupLine($"[cyan]{table.Name.Schema}.{table.Name.Name}[/]");
 
-            MarkupLine($"    [yellow]{string.Join(',', table.Columns.Select(c => c.Text))}[/]");
+            foreach (DataExcelTableColumn column in table.Columns)
+            {
+                MarkupLine($"    [yellow]{column.Text}[/]");
+                MarkupLine($"        [cyan]{column.Metadata?.ToString().EscapeMarkup() ?? "<No metadata>"}[/]");
+            }
 
             foreach (object?[] row in table.EnumerateRows())
             {

@@ -2,6 +2,7 @@
 // This file is licensed to you under the MIT License.
 // See the LICENSE file in the project root for more information.
 
+using Datask.Providers.SqlServer;
 using Datask.Tool.ExcelData.Core.Excel.Creator;
 
 namespace Datask.Tool.ExcelData.Excel;
@@ -45,11 +46,11 @@ public sealed class CreateCommand : BaseCommand
             ExcelFile.Delete();
         }
 
-        ExcelCreatorOptions options = new(ConnectionString, ExcelFile);
+        ExcelCreatorOptions options = new(typeof(SqlServerProvider), ConnectionString, ExcelFile);
         options.IncludeTables.AddRange(IncludeTables.Distinct(StringComparer.OrdinalIgnoreCase));
         options.ExcludeTables.AddRange(ExcludeTables.Distinct(StringComparer.OrdinalIgnoreCase));
 
-        ExcelGenerator generator = new(options);
+        ExcelCreator generator = new(options);
         generator.OnStatus += (_, args) =>
         {
             ctx.Status(args.Message ?? string.Empty);
