@@ -20,6 +20,7 @@ public sealed class ExcelValidator : ProviderExecutor<ExcelValidatorOptions, Sta
     private async IAsyncEnumerable<ValidationDiff> GetValidationDiffs()
     {
         DataExcelWorkbook workbook = new(Options.ExcelFilePath.FullName);
+        List<DataExcelTable> excelTables = workbook.EnumerateTables().ToList();
 
         // Get all tables from DB and sort by foreign key dependencies.
         TableDefinitionCollection dbTables = await Provider.SchemaQuery.GetTables(new GetTableOptions
@@ -30,58 +31,44 @@ public sealed class ExcelValidator : ProviderExecutor<ExcelValidatorOptions, Sta
             CustomizeTableName = (schema, table) => new DbObjectName(schema.Replace(" ", "__"), table.Replace(" ", "__")),
         });
 
-        var excelTables = workbook.EnumerateTables().ToList();
+        IEnumerable<SequenceDiff> tableDiffs = dbTables.GetSequenceDiffs(excelTables, (dbTable, excelTable) =>
+            string.Equals(dbTable.Name.ToString(), excelTable.Name.ToString(), StringComparison.OrdinalIgnoreCase));
 
-        // Go through each database table and validate.
-        foreach (TableDefinition dbTable in dbTables)
+        foreach (SequenceDiff tableDiff in tableDiffs)
         {
-            // Find the corresponding table in the Excel file.
-            DataExcelTable? excelTable = excelTables.FirstOrDefault(et => string.Equals(dbTable.Name.ToString(),
-                et.Name.ToString(), StringComparison.OrdinalIgnoreCase));
+            if (tableDiff is NewElementDiff<TableDefinition> newElementDiff)
+                yield return new NewTableDiff(newElementDiff.Element.Name);
+            else if (tableDiff is RemovedElementDiff<DataExcelTable> removedElementDiff)
+                yield return new DeletedTableDiff(removedElementDiff.Element.Name);
+        } 
 
-            // If the table is not found in the Excel file, then it's probably a newly-added table.
-            // No need to process the table further.
-            if (excelTable is null)
+        // Go through unchanged tables and check the columns.
+        foreach (UnchangedElementDiff<TableDefinition, DataExcelTable> unchangedTable in tableDiffs.OfType<UnchangedElementDiff<TableDefinition, DataExcelTable>>())
+        {
+            IEnumerable<SequenceDiff> columnDiffs = unchangedTable.PrimaryElement.Columns.GetSequenceDiffs(
+                unchangedTable.ComparisonElement.Columns,
+                (dbCol, excelCol) => string.Equals(dbCol.Name, excelCol.Metadata?.Name, StringComparison.OrdinalIgnoreCase),
+                checkOrder: true);
+
+            foreach (SequenceDiff columnDiff in columnDiffs)
             {
-                yield return new NewTableDiff(dbTable.Name);
-                continue;
-            }
-
-            // Check if any Excel column has missing or invalid metadata.
-            foreach (DataExcelTableColumn excelColumn in excelTable.Columns)
-            {
-                if (excelColumn.Metadata is null)
-                    yield return new MissingColumnMetadataDiff(dbTable.Name, excelColumn.Text);
-            }
-
-            // Now process the columns.
-            foreach (ColumnDefinition dbColumn in dbTable.Columns)
-            {
-                // Find the corresponding column in the Excel file
-                DataExcelTableColumn? excelColumn = excelTable.Columns.FirstOrDefault(
-                    etc => string.Equals(dbColumn.Name, etc.Metadata?.Name, StringComparison.OrdinalIgnoreCase));
-
-                // If the column is not found in the Excel file, then it's probably a newly-added column.
-                // No need to process the table further.
-                if (excelColumn is null)
+                if (columnDiff is NewElementDiff<ColumnDefinition> newColumn)
+                    yield return new NewColumnDiff(unchangedTable.PrimaryElement.Name, newColumn.Element.Name);
+                else if (columnDiff is RemovedElementDiff<DataExcelTableColumn> removedColumn)
+                    yield return new DeletedColumnDiff(unchangedTable.PrimaryElement.Name, removedColumn.Element.Metadata?.Name!);
+                else if (columnDiff is IndexChangedElementDiff<ColumnDefinition, DataExcelTableColumn> reorderedColumn)
                 {
-                    yield return new NewColumnDiff(dbTable.Name, dbColumn.Name);
-                    continue;
+                    yield return new ReorderedColumnDiff(unchangedTable.PrimaryElement.Name,
+                        reorderedColumn.PrimaryElement.Name, reorderedColumn.OldIndex, reorderedColumn.NewIndex);
                 }
+            }
 
-                if (excelColumn.Metadata is null)
-                    continue;
-
-                // Compare the metadata
-                foreach (ColumnDiff columnDiff in GetColumnMetadataDiffs(dbTable.Name, dbColumn, excelColumn.Metadata))
+            foreach (UnchangedElementDiff<ColumnDefinition, DataExcelTableColumn> unchangedColumn in columnDiffs.OfType<UnchangedElementDiff<ColumnDefinition, DataExcelTableColumn>>())
+            {
+                foreach (ColumnDiff columnDiff in GetColumnMetadataDiffs(unchangedTable.PrimaryElement.Name, unchangedColumn.PrimaryElement, unchangedColumn.ComparisonElement.Metadata!))
                     yield return columnDiff;
             }
         }
-
-        IEnumerable<DataExcelTable> newExcelTables = excelTables.Where(et => !dbTables.Any(dbt =>
-            string.Equals(et.Name.ToString(), dbt.Name.ToString(), StringComparison.OrdinalIgnoreCase)));
-        foreach (DataExcelTable newExcelTable in newExcelTables)
-            yield return new DeletedTableDiff(newExcelTable.Name);
     }
 
     private IEnumerable<ColumnDiff> GetColumnMetadataDiffs(DbObjectName tableName, ColumnDefinition dbColumn,

@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 using Datask.Common.Utilities;
 using Datask.Providers;
@@ -61,14 +60,6 @@ public sealed class DataExcelTable
         _columns = new Lazy<IList<DataExcelTableColumn>>(LoadColumns);
     }
 
-    private (string Schema, string TableName) GetNames(XSSFTable table)
-    {
-        string[] parts = table.Name.Split(new[] { '.' }, 2, StringSplitOptions.None);
-        return parts.Length == 2
-            ? (parts[0], parts[1])
-            : throw new DataskException($"Excel table {table.DisplayName} has an invalid name.");
-    }
-
     public DbObjectName Name { get; }
 
     public IList<DataExcelTableColumn> Columns => _columns.Value;
@@ -109,7 +100,7 @@ public sealed class DataExcelTable
         List<DataExcelTableColumn> columns = new(endRef.Col - startRef.Col + 1);
 
         IRow headerRow = _table.GetXSSFSheet().GetRow(startRef.Row);
-        for (int colIdx = startRef.Col; colIdx < endRef.Col; colIdx++)
+        for (int colIdx = startRef.Col; colIdx <= endRef.Col; colIdx++)
         {
             ICell headerCell = headerRow.GetCell(colIdx);
             columns.Add(new DataExcelTableColumn(headerCell));

@@ -2,9 +2,11 @@
 
 namespace Datask.Tool.ExcelData.Core.Excel.Validator;
 
-public abstract record ValidationDiff;
+public abstract record ValidationDiff(DbObjectName Table);
 
-public abstract record TableDiff(DbObjectName Table) : ValidationDiff;
+// *** TABLE DIFFERENCES ***
+
+public abstract record TableDiff(DbObjectName Table) : ValidationDiff(Table);
 
 public sealed record NewTableDiff(DbObjectName Table) : TableDiff(Table);
 
@@ -12,13 +14,18 @@ public sealed record DeletedTableDiff(DbObjectName Table) : TableDiff(Table);
 
 public sealed record RenamedTableDiff(DbObjectName Table) : TableDiff(Table);
 
-public abstract record ColumnDiff(DbObjectName Table, string Column) : ValidationDiff;
+// *** COLUMN DIFFERENCES ***
+
+public abstract record ColumnDiff(DbObjectName Table, string Column) : ValidationDiff(Table);
 
 public sealed record NewColumnDiff(DbObjectName Table, string Column) : ColumnDiff(Table, Column);
 
 public sealed record DeletedColumnDiff(DbObjectName Table, string Column) : ColumnDiff(Table, Column);
 
 public sealed record RenamedColumnDiff(DbObjectName Table, string Column) : ColumnDiff(Table, Column);
+
+public sealed record ReorderedColumnDiff(DbObjectName Table, string Column, int OldIndex, int NewIndex)
+    : ColumnDiff(Table, Column);
 
 public sealed record MissingColumnMetadataDiff(DbObjectName Table, string Column) : ColumnDiff(Table, Column);
 

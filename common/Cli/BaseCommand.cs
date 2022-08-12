@@ -10,11 +10,17 @@ namespace Datask.Common.Cli;
 
 public abstract class BaseCommand : Command
 {
-    public sealed override Task<int> HandleCommandAsync(IParseResult parseResult)
+    public sealed override async Task<int> HandleCommandAsync(IParseResult parseResult)
     {
-        return DataskCli.StartAsync("Processing...",
+        int result = await DataskCli.StartAsync("Processing...",
             async ctx => await ExecuteAsync(ctx, parseResult).ConfigureAwait(false));
+        return await PostExecuteAsync(result, parseResult);
     }
 
     protected abstract Task<int> ExecuteAsync(StatusContext ctx, IParseResult parseResult);
+
+    protected virtual Task<int> PostExecuteAsync(int executeResult, IParseResult parseResult)
+    {
+        return Task.FromResult(executeResult);
+    }
 }

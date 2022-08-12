@@ -23,19 +23,45 @@ public sealed class ValidateCommand : BaseCommand
     [FlagHelp("Start an interactive session to fix validation issues.")]
     public bool Fix { get; set; }
 
-    protected override async Task<int> ExecuteAsync(StatusContext ctx, IParseResult parseResult)
+    protected override Task<int> ExecuteAsync(StatusContext ctx, IParseResult parseResult)
     {
         AnsiConsole.MarkupLine($"Excel file path  : {ExcelFile.FullName}");
         AnsiConsole.MarkupLine($"Connection string: {ConnectionString}");
         AnsiConsole.MarkupLine($"Fix errors       : {Fix}");
+        return Task.FromResult(0);
+    }
 
+    protected override async Task<int> PostExecuteAsync(int executeResult, IParseResult parseResult)
+    {
         ExcelValidatorOptions options = new(typeof(SqlServerProvider), ConnectionString, ExcelFile);
         ExcelValidator validator = new(options);
         await validator.ExecuteAsync().ConfigureAwait(false);
 
         AnsiConsole.MarkupLine($"Differences found: {validator.Diffs.Count}");
-        foreach (ValidationDiff diff in validator.Diffs)
-            AnsiConsole.MarkupLine(diff.ToString());
+
+        foreach (TableDiff tableDiff in validator.Diffs.OfType<TableDiff>())
+        {
+            if (tableDiff is NewTableDiff newTable)
+                AnsiConsole.MarkupLine($"[green]{newTable.Table.ToString().EscapeMarkup()}[/]");
+            else if (tableDiff is DeletedTableDiff deletedTable)
+                AnsiConsole.MarkupLine($"[red]{deletedTable.Table.ToString().EscapeMarkup()}[/]");
+        }
+
+        foreach (IGrouping<DbObjectName, ColumnDiff> columnDiff in validator.Diffs.OfType<ColumnDiff>().GroupBy(cd => cd.Table))
+        {
+            AnsiConsole.MarkupLine($"[yellow]{columnDiff.Key.ToString().EscapeMarkup()}[/]");
+            foreach (ColumnDiff diff in columnDiff)
+            {
+                (string Color, string? Message) output = diff switch
+                {
+                    NewColumnDiff => ("green", null),
+                    DeletedColumnDiff => ("red", "Deleted"),
+                    MissingColumnMetadataDiff => ("red", "Missing metadata"),
+                    _ => ("yellow", "Metadata changed"),
+                };
+                AnsiConsole.MarkupLine($"    [{output.Color}]{diff.Column.EscapeMarkup()} ({output.Message.EscapeMarkup()})[/]");
+            }
+        }
 
         return validator.Diffs.Count;
     }
