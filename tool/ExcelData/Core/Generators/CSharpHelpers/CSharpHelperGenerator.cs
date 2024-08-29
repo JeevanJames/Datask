@@ -83,7 +83,10 @@ public sealed class CSharpHelperGenerator : GeneratorBase<CSharpHelperGeneratorO
                 await writer.WriteAsync(RenderTemplate(await CSharpHelperTemplates.PopulateTableDataTemplate,
                     new
                     {
-                        table = td, dr = dataRows, fullRows, has_identity_column = td.Columns.Any(c => c.IsIdentity)
+                        table = td,
+                        dr = dataRows,
+                        fullRows,
+                        has_identity_column = td.Columns.Any(c => c.IsIdentity)
                     })).ConfigureAwait(false);
             }
 
@@ -219,7 +222,7 @@ public sealed class CSharpHelperGenerator : GeneratorBase<CSharpHelperGeneratorO
                     continue;
 
                 rowList.Add(
-                    ConvertObjectValToCSharpType(row.GetCell(j), td.Columns[j].DbType, td.Columns[j].NativeType));
+                    ConvertObjectValToCSharpType(row.GetCell(j), td.Columns[j].DbType, td.Columns[j].NativeType, td.Columns[j].IsNullable));
             }
 
             if (rowList.Count > 0)
@@ -229,9 +232,9 @@ public sealed class CSharpHelperGenerator : GeneratorBase<CSharpHelperGeneratorO
         return dataRows;
     }
 
-    private static string ConvertObjectValToCSharpType(object? rowValue, DbType columnType, string nativeType)
+    private static string ConvertObjectValToCSharpType(object? rowValue, DbType columnType, string nativeType, bool isNullable)
     {
-        if (rowValue is null)
+        if (rowValue is null || (isNullable && rowValue.ToString().Equals("NULL", StringComparison.OrdinalIgnoreCase)))
             return "null";
 
         return columnType switch
