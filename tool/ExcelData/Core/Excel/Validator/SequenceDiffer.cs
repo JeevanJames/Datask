@@ -48,7 +48,9 @@ internal static class SequenceDiffer
     }
 }
 
+#pragma warning disable S2094 // Classes should not be empty
 internal abstract record SequenceDiff;
+#pragma warning restore S2094 // Classes should not be empty
 
 internal sealed record NewElementDiff<TPrimary>(TPrimary Element) : SequenceDiff
     where TPrimary : class;

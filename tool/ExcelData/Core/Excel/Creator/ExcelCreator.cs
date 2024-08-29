@@ -66,7 +66,7 @@ public sealed class ExcelCreator : ProviderExecutor<ExcelCreatorOptions, StatusE
         }
     }
 
-    private bool TryCreateWorksheet(ExcelWorkbook workbook, TableDefinition table,
+    private static bool TryCreateWorksheet(ExcelWorkbook workbook, TableDefinition table,
         [NotNullWhen(true)] out ExcelWorksheet? worksheet)
     {
         if (workbook.Worksheets.SelectMany(ws => ws.Tables).Any(tbl => tbl.Name == table.Name.ToString()))

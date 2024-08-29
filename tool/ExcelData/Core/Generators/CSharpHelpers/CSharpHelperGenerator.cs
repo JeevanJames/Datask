@@ -212,7 +212,7 @@ public sealed class CSharpHelperGenerator : GeneratorBase<CSharpHelperGeneratorO
             IRow row = sheet.GetRow(i);
             if (row == null)
                 continue;
-            if (row.Cells.All(d => d.CellType == CellType.Blank))
+            if (row.Cells.TrueForAll(d => d.CellType == CellType.Blank))
                 continue;
 
             for (int j = row.FirstCellNum; j < cellCount; j++)

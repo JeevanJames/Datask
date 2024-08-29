@@ -18,11 +18,11 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Collections.NET" Version="1.7.0" />
-        <PackageReference Include="DotLiquid" Version="2.2.595" />
+        <PackageReference Include="Collections.NET" Version="1.13.0" />
+        <PackageReference Include="DotLiquid" Version="2.2.692" />
         <PackageReference Include="DotNetCore.NPOI" Version="1.2.3" />
         <PackageReference Include="EPPlus" Version="[4.5.3.3,5)" />
-        <PackageReference Include="System.Linq.Async" Version="5.1.0" />
+        <PackageReference Include="System.Linq.Async" Version="6.0.1" />
     </ItemGroup>
 
     <ItemGroup>

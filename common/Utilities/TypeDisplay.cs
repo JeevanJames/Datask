@@ -13,7 +13,7 @@ public static class TypeDisplay
 
         // Deal with generics
 
-        return trimmableNamespaces.Any(ns => string.Equals(type.Namespace, ns, StringComparison.Ordinal))
+        return Array.Exists(trimmableNamespaces, ns => string.Equals(type.Namespace, ns, StringComparison.Ordinal))
             ? type.Name
             : type.FullName ?? type.Name;
     }

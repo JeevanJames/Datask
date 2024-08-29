@@ -40,7 +40,7 @@ public sealed class ExcelValidator : ProviderExecutor<ExcelValidatorOptions, Sta
                 yield return new NewTableDiff(newElementDiff.Element.Name);
             else if (tableDiff is RemovedElementDiff<DataExcelTable> removedElementDiff)
                 yield return new DeletedTableDiff(removedElementDiff.Element.Name);
-        } 
+        }
 
         // Go through unchanged tables and check the columns.
         foreach (UnchangedElementDiff<TableDefinition, DataExcelTable> unchangedTable in tableDiffs.OfType<UnchangedElementDiff<TableDefinition, DataExcelTable>>())
@@ -71,7 +71,7 @@ public sealed class ExcelValidator : ProviderExecutor<ExcelValidatorOptions, Sta
         }
     }
 
-    private IEnumerable<ColumnDiff> GetColumnMetadataDiffs(DbObjectName tableName, ColumnDefinition dbColumn,
+    private static IEnumerable<ColumnDiff> GetColumnMetadataDiffs(DbObjectName tableName, ColumnDefinition dbColumn,
         DataExcelTableColumnMetadata excelMetadata)
     {
         if (dbColumn.IsPrimaryKey != excelMetadata.IsPrimaryKey)

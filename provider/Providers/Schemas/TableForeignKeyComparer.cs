@@ -22,11 +22,11 @@ public sealed class TableForeignKeyComparer : Comparer<TableDefinition>
                             where c.ForeignKey is not null
                             select c.ForeignKey).ToList();
 
-        if (xForeignKeys.Any(y.Equals))
+        if (xForeignKeys.Exists(y.Equals))
             return 1;
-        if (yForeignKeys.Any(x.Equals))
+        if (yForeignKeys.Exists(x.Equals))
             return -1;
-        if (xForeignKeys.Any(x.Equals) || yForeignKeys.Any(y.Equals))
+        if (xForeignKeys.Exists(x.Equals) || yForeignKeys.Exists(y.Equals))
             return 0;
 
         return 0;
